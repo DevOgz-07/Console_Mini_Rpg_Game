@@ -12,7 +12,7 @@ namespace Mini_Oyun
         Zirh,
         Tuketilebilir, // İksir Tarzı Şeyler.
     }
-    internal class Oge // İtem Sınıfı.
+    public class Oge // İtem Sınıfı.
     {
         public string Ad {  get; set; }
 

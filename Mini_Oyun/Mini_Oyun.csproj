@@ -45,6 +45,8 @@
   <ItemGroup>
     <Compile Include="Canavar ve Boss.cs" />
     <Compile Include="Karakter.cs" />
+    <Compile Include="LootEntry.cs" />
+    <Compile Include="LootManager.cs" />
     <Compile Include="MonsterDBO.cs" />
     <Compile Include="Oge.cs" />
     <Compile Include="OyunMotoru.cs" />

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using static Mini_Oyun.Canavar_ve_Boss;
+
 
 namespace Mini_Oyun
 {
@@ -28,15 +28,16 @@ namespace Mini_Oyun
 
             private void CanavarlariOlustur()
             {
-                canavarHavuzu.Add(new Goblin());
-                canavarHavuzu.Add(new Iskelet());
-                canavarHavuzu.Add(new Orc());
+                canavarHavuzu.AddRange(CanavarVeritabani.TumCommonCanavarlar);
+                canavarHavuzu.AddRange(CanavarVeritabani.TumRareCanavarlar);
+
             }
+
+           
 
             private void BosslariOlustur()
             {
-                bossHavuzu.Add(new Ejderha());
-                bossHavuzu.Add(new OrcReisi());
+                canavarHavuzu.AddRange(CanavarVeritabani.TumBossCanavarlar);
             }
 
             public void OyunuBaslat()
@@ -167,20 +168,20 @@ namespace Mini_Oyun
                             break;
                     }
 
-                    if (!hedef.HayattaMi())
+                    var dusenOgeler = hedef.OgeDusur();
+
+                    if (dusenOgeler != null && dusenOgeler.Count > 0)
                     {
-                        Console.WriteLine($"{hedef.Ad} yenildi!");
-                        oyuncu.TecrubeKazan(hedef.VerilenTecrube);
-                        Oge dusenOge = hedef.OgeDusur();
-                        if (dusenOge != null)
+                        Console.WriteLine($"{hedef.Ad} öldü ve şunları düşürdü:");
+
+                        foreach (var oge in dusenOgeler)
                         {
-                            Console.WriteLine($"{hedef.Ad} öldü ve {dusenOge.Ad} düşürdü!");
-                            oyuncu.Envanter.Add(dusenOge);
+                            Console.WriteLine($"- {oge.Ad}");
+                            oyuncu.Envanter.Add(oge);
                         }
-                        break; 
                     }
 
-                    
+
                     int canavarHasar = random.Next(hedef.SaldiriGucu / 2, hedef.SaldiriGucu + 1);
                     oyuncu.Can -= canavarHasar;
                     Console.WriteLine($"{hedef.Ad}, {oyuncu.Ad}'a {canavarHasar} hasar verdi!");
