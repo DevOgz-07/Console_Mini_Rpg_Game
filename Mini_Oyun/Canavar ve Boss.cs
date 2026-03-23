@@ -34,8 +34,8 @@ namespace Mini_Oyun
             public Canavar(string ad, int can, int saldiri, int exp, CanavarTuru tur, string lootTableId)
             {
                 Ad = ad;
-                MaksimumCan = can;
                 Can = can;
+                MaksimumCan = can;
                 SaldiriGucu = saldiri;
                 VerilenTecrube = exp;
                 Turu = tur;
@@ -56,6 +56,7 @@ namespace Mini_Oyun
         {
                  Ad = ad;
                  Can = hp;
+                 MaksimumCan = hp;
                  VerilenTecrube = exp;
                  MinimumHasari = minHasar;
                  MaksimumHasari = maxHasar;

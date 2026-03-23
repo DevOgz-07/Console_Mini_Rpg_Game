@@ -9,50 +9,65 @@ namespace Mini_Oyun
     internal class Karakter
     {
         public string Ad { get; set; }
-        public int Can {  get; set; }
+        public int Can { get; set; }
         public int MaksimumCan { get; set; }
         public int SaldiriGucu { get; set; }
+        public int Savunma { get; set; } // DEX'ten gelen savunma puanı
         public int Tecrube { get; set; }
         public int Seviye { get; set; }
         public List<Oge> Envanter { get; set; }
         public Oge DonanimliSilah { get; set; }
 
-        public Karakter(string ad, int can, int saldiriGucu)
+        // --- Temel Statlar ---
+        public int YetenekPuani { get; set; } = 0;
+        public int HP_Stat { get; set; }
+        public int STR_Stat { get; set; }
+        public int DEX_Stat { get; set; }
+
+        public Karakter(string ad, int baslangicCan, int baslangicSaldiri)
         {
             Ad = ad;
-            MaksimumCan = can;
-            Can = can;
-            SaldiriGucu = saldiriGucu;
+            MaksimumCan = baslangicCan;
+            Can = baslangicCan;
+            SaldiriGucu = baslangicSaldiri;
+            Savunma = 0; // Başlangıç savunması
             Tecrube = 0;
             Seviye = 1;
             Envanter = new List<Oge>();
             DonanimliSilah = null;
 
+            // Statları başlangıçta 1 olarak kabul edelim (veya istediğin değer)
+            HP_Stat = 1;
+            STR_Stat = 1;
+            DEX_Stat = 1;
         }
 
         public void SeviyeAtla()
         {
             Seviye++;
-            MaksimumCan += 20; // Karakter bir seviye aldıkça karakterin seviye bazlı yükseleceği can miktarı.
-            Can = MaksimumCan; // Canı Tamamlar.
-            SaldiriGucu += 5; // Seviye arttıkça artan saldırı değeri.
-            Console.WriteLine($"\n***Tebrikler! {Seviye}. seviyeye Ulaştınız! ***");
-            Console.WriteLine($"Yeni Can: {Can}, Yeni Saldırı Gücü: {SaldiriGucu + (DonanimliSilah?.EtkiDegeri ?? 0)}");
+            YetenekPuani += 1; // Her seviyede 1 puan veriyoruz
+
+            // Seviye atlayınca canı hala tazeleyebiliriz (opsiyonel)
+            Can = MaksimumCan;
+
+            Console.WriteLine($"\n*** TEBRİKLER! {Seviye}. Seviyeye Ulaştınız! ***");
+            Console.WriteLine("1 Yeni Yetenek Puanı Kazandınız!");
         }
 
         public void TecrubeKazan(int kazanilanTecrube)
         {
             Tecrube += kazanilanTecrube;
-            int sonrakiSeviyeTecrube = Seviye * 50; // Sonraki seviye için gereken tecrübe
+            // Dinamik seviye zorluğu
+            int sonrakiSeviyeTecrube = Seviye * 100;
 
             while (Tecrube >= sonrakiSeviyeTecrube)
             {
                 Tecrube -= sonrakiSeviyeTecrube;
                 SeviyeAtla();
-                sonrakiSeviyeTecrube = Seviye * 150; // Yeni seviye için yeni tecrübe gereksinimi
+                sonrakiSeviyeTecrube = Seviye * 100;
             }
-
         }
+
         public void EnvanteriGoster()
         {
             Console.WriteLine("\n--- Envanter ---");
@@ -66,7 +81,6 @@ namespace Mini_Oyun
                 Console.Write($"{i + 1}. ");
                 Envanter[i].BilgileriGoster();
             }
-
             Console.WriteLine("-----------------\n");
         }
 
@@ -84,32 +98,24 @@ namespace Mini_Oyun
             {
                 Can += secilenOge.EtkiDegeri;
                 if (Can > MaksimumCan) Can = MaksimumCan;
-                Console.WriteLine($"{secilenOge.Ad} kullandınız. Canınız {secilenOge.EtkiDegeri} arttı. Güncel Can: {Can}");
-                Envanter.RemoveAt(index); 
+                Console.WriteLine($"{secilenOge.Ad} kullandınız. Güncel Can: {Can}");
+                Envanter.RemoveAt(index);
             }
             else if (secilenOge.Tur == OgeTuru.Silah)
             {
                 if (DonanimliSilah != null)
                 {
-                    Envanter.Add(DonanimliSilah); 
-                    SaldiriGucu -= DonanimliSilah.EtkiDegeri; // Eski silahın etkisini kaldırır.
+                    Envanter.Add(DonanimliSilah);
+                    SaldiriGucu -= DonanimliSilah.EtkiDegeri;
                     Console.WriteLine($"{DonanimliSilah.Ad} çıkarıldı.");
                 }
                 DonanimliSilah = secilenOge;
                 SaldiriGucu += DonanimliSilah.EtkiDegeri;
-                Envanter.RemoveAt(index); // Silahı envanterden çıkartır.
-                Console.WriteLine($"{DonanimliSilah.Ad} kuşandınız! Saldırı gücünüz {DonanimliSilah.EtkiDegeri} arttı. Güncel Saldırı Gücü: {SaldiriGucu}");
-            }
-            else if (secilenOge.Tur == OgeTuru.Zirh)
-            {
-                Console.WriteLine("Zırh kuşatma özelliği henüz eklenmedi.");
-                // Zırhın Savunma Etkisi.
+                Envanter.RemoveAt(index);
+                Console.WriteLine($"{DonanimliSilah.Ad} kuşandınız! Toplam Saldırı Gücü: {SaldiriGucu}");
             }
         }
 
-        public bool HayattaMi()
-        {
-            return Can > 0;
-        }
+        public bool HayattaMi() => Can > 0;
     }
 }

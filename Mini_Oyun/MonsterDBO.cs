@@ -6,7 +6,7 @@ namespace Mini_Oyun
     internal static class CanavarVeritabani
     {
 
-       public static List<Canavar> TumCommonCanavarlar { get; private set; } = new List<Canavar>
+        public static List<Canavar> TumCommonCanavarlar { get; private set; } = new List<Canavar>
        {
             new Canavar("Strenuer", 25, 6, 12, CanavarTuru.CommonMonster, "LT_Strenuer"),
             new Canavar("Velitor", 28, 7, 14, CanavarTuru.CommonMonster, "LT_Velitor"),
@@ -53,9 +53,9 @@ namespace Mini_Oyun
 
         public static List<Boss> TumBossCanavarlar { get; private set; } = new List<Boss>
         {
-             new Boss("Dreadlord Xarth", 120, 20, 35, "LT_Boss_Dreadlord"),
-             new Boss("Void Titan Azrul", 150, 25, 40, "LT_Boss_VoidTitan"),
-             new Boss("Bloodfang Korgath", 130, 22, 38, "LT_Boss_Bloodfang"),
+             new Boss("Dreadlord Xarth", 120, 20, 35, 100,  "LT_Boss_Dreadlord"),
+             new Boss("Void Titan Azrul", 150, 25, 40, 100, "LT_Boss_VoidTitan"),
+             new Boss("Bloodfang Korgath", 130, 22, 38, 100, "LT_Boss_Bloodfang"),
         };
 
 
@@ -68,9 +68,9 @@ namespace Mini_Oyun
             tumu.AddRange(TumEpicCanavarlar);
             tumu.AddRange(TumLegendaryCanavarlar);
             tumu.AddRange(TumMythicCanavarlar);
-            tumu.AddRange (TumBossCanavarlar);
-            
-            
+            tumu.AddRange(TumBossCanavarlar);
+
+
             return tumu;
         }
     }
