@@ -331,34 +331,35 @@ namespace Mini_Oyun
            
             private void KarakterAyrıntıları()
             {
-                Console.Clear(); // Ekranı temizleyerek daha derli toplu bir görüntü sunalım
+                Console.Clear(); 
 
-               
-                
-                int gerekenToplamTecrube = oyuncu.Seviye * 100;
+
+
+                int gerekenToplamTecrube = oyuncu.SonrakiSeviyeIcinGerekenToplamEXP();
                 int kalanTecrube = gerekenToplamTecrube - oyuncu.Tecrube;
 
                 Console.WriteLine("========================================");
                 Console.WriteLine($"        KARAKTER PROFİLİ: {oyuncu.Ad.ToUpper()} ");
                 Console.WriteLine("========================================");
-                Console.WriteLine($" [SEVİYE]         : {oyuncu.Seviye}");
-                Console.WriteLine($" [CAN]            : {oyuncu.Can} / {oyuncu.MaksimumCan}");
-                Console.WriteLine($" [TECRÜBE]        : {oyuncu.Tecrube} / {gerekenToplamTecrube}");
-                Console.WriteLine($" [KALAN TP]       : Bir Sonraki Seviye İçin {kalanTecrube} TP lazım.");
-                Console.WriteLine($" [İLERLEME]       : {oyuncu.GetEXPBar()}");
+                Console.WriteLine($" [SEVİYE]          : {oyuncu.Seviye}");
+                Console.WriteLine($" [CAN]             : {oyuncu.Can} / {oyuncu.MaksimumCan}");
+                Console.WriteLine($" [İLERLEME]        : {oyuncu.GetEXPBar()}"); 
+                Console.WriteLine($" [SEVİYE TP]       : {oyuncu.Tecrube} / {gerekenToplamTecrube}");
+                Console.WriteLine($" [TOPLAM TP]       : {oyuncu.ToplamTecrube}"); 
+                Console.WriteLine($" [KALAN TP]        : Bir Sonraki Seviye İçin {kalanTecrube} TP lazım.");
 
                 Console.WriteLine("----------------------------------------");
                 Console.WriteLine("         TEMEL İSTATİSTİKLER  ");
                 Console.WriteLine("----------------------------------------");
-                Console.WriteLine($" [STR (Güç)]      : {oyuncu.STR_Stat}  -> (Hasar: {oyuncu.SaldiriGucu})");
-                Console.WriteLine($" [HP  (Can)]      : {oyuncu.HP_Stat}  -> (Max Can: {oyuncu.MaksimumCan})");
-                Console.WriteLine($" [DEX (Savunma)]  : {oyuncu.DEX_Stat}  -> (Zırh: {oyuncu.Savunma})");
+                Console.WriteLine($" [STR (Güç)]       : {oyuncu.STR_Stat}  -> (Hasar: {oyuncu.SaldiriGucu})");
+                Console.WriteLine($" [HP  (Can)]       : {oyuncu.HP_Stat}  -> (Max Can: {oyuncu.MaksimumCan})");
+                Console.WriteLine($" [DEX (Savunma)]   : {oyuncu.DEX_Stat}  -> (Zırh: {oyuncu.Savunma})");
 
                 Console.WriteLine("----------------------------------------");
-                Console.WriteLine($" [YETENEK PUANI]  : {oyuncu.YetenekPuani} (Harcanabilir)");
+                Console.WriteLine($" [YETENEK PUANI]   : {oyuncu.YetenekPuani} (Harcanabilir)");
                 Console.WriteLine("========================================");
 
-                // Donanımlı Eşya Var mı?
+                
                 string silahAdi = oyuncu.DonanimliSilah != null ? oyuncu.DonanimliSilah.Ad : "Yok";
                 Console.WriteLine($" [KUŞANILMIŞ SİLAH]: {silahAdi}");
 

@@ -25,7 +25,7 @@ namespace Mini_Oyun
             public int MaksimumHasari { get; set; }
 
 
-        public CanavarTuru Turu { get; set; }
+            public CanavarTuru Turu { get; set; }
 
             public string LootTableId { get; set; }  //düşürelecek itemlerin havuzunu belirlemek için kullanılacak.
 

@@ -13,7 +13,8 @@ namespace Mini_Oyun
         public int MaksimumCan { get; set; }
         public int SaldiriGucu { get; set; }
         public int Savunma { get; set; }
-        public int Tecrube { get; set; } // Toplam biriken EXP (Asla sıfırlanmaz)
+        public int Tecrube { get; set; } 
+        public int ToplamTecrube { get; private set; } = 0;
         public int Seviye { get; set; }
         
         public List<Oge> Envanter { get; set; }
@@ -40,13 +41,11 @@ namespace Mini_Oyun
             DEX_Stat = 1;
         }
 
-
+        #region karakter seviye ve tecrube sistemi
         public int SonrakiSeviyeIcinGerekenToplamEXP()
         {
-            
             if (Seviye == 1) return 100;
-
-           
+            
             return 300 * (int)Math.Pow(2, Seviye - 2);
         }
 
@@ -58,14 +57,15 @@ namespace Mini_Oyun
 
         public void TecrubeKazan(int miktar)
         {
-            Tecrube += miktar;
+            Tecrube += miktar;       
+            ToplamTecrube += miktar; 
+
             Console.WriteLine($"\n[+] {miktar} tecrübe puanı kazandınız.");
 
-            
             while (Tecrube >= SonrakiSeviyeIcinGerekenToplamEXP())
             {
                 int gereken = SonrakiSeviyeIcinGerekenToplamEXP();
-                Tecrube -= gereken; 
+                Tecrube -= gereken;
                 SeviyeAtla();
             }
         }
@@ -83,23 +83,21 @@ namespace Mini_Oyun
 
         public string GetEXPBar()
         {
-            int ust = SonrakiSeviyeIcinGerekenToplamEXP();
-            int alt = MevcutSeviyeBaslangicEXP(); 
+            int hedef = SonrakiSeviyeIcinGerekenToplamEXP();
+            double oran = (double)Tecrube / hedef; 
 
-           
-            double oran = (double)(Tecrube - alt) / (ust - alt);
-
-            if (oran < 0) oran = 0;
             if (oran > 1) oran = 1;
 
             int barGenisligi = 20;
             int dolu = (int)(oran * barGenisligi);
 
-            
             string bar = new string('█', dolu) + new string('░', barGenisligi - dolu);
-            return $"[{bar}] %{(int)(oran * 100)}";
+            return $"{bar} %{(int)(oran * 100)}";
         }
+        #endregion
 
+
+        #region karakter envanter ve öğe kullanımı
         public void EnvanteriGoster()
         {
             Console.WriteLine("\n--- Envanter ---");
@@ -147,6 +145,7 @@ namespace Mini_Oyun
                 Console.WriteLine($"{DonanimliSilah.Ad} kuşandınız! Toplam Saldırı Gücü: {SaldiriGucu}");
             }
         }
+        #endregion
 
         public bool HayattaMi() => Can > 0;
     }
