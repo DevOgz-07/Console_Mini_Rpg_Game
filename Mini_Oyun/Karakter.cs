@@ -10,35 +10,40 @@ namespace Mini_Oyun
     {
         public string Ad { get; set; }
         public int Can { get; set; }
-        public int MaksimumCan { get; set; }
-        public int SaldiriGucu { get; set; }
-        public int Savunma { get; set; }
-        public int Tecrube { get; set; } 
+        public int Tecrube { get; set; }
         public int ToplamTecrube { get; private set; } = 0;
         public int Seviye { get; set; }
-        
-        public List<Oge> Envanter { get; set; }
-        public Oge DonanimliSilah { get; set; }
-
         public int YetenekPuani { get; set; } = 0;
+
+        // --- İSTATİSTİKLER ---
         public int HP_Stat { get; set; }
         public int STR_Stat { get; set; }
         public int DEX_Stat { get; set; }
+        public int KritikSans => 15;
 
-        public Karakter(string ad, int baslangicCan, int baslangicSaldiri)
+        // --- DİNAMİK HESAPLANAN ÖZELLİKLER ---
+        // Bu kısımlar statlar arttığında otomatik güncellenir.
+        public int MaksimumCan { get; set; } = 350;
+        public int SaldiriGucu { get; set; } = 25;
+        public int Savunma { get; set; } = 1;
+
+        public List<Oge> Envanter { get; set; }
+        public Oge DonanimliSilah { get; set; }
+
+        
+        public Karakter(string ad)
         {
             Ad = ad;
-            MaksimumCan = baslangicCan;
-            Can = baslangicCan;
-            SaldiriGucu = baslangicSaldiri;
-            Savunma = 0;
-            Tecrube = 0;
             Seviye = 1;
-            Envanter = new List<Oge>();
-            DonanimliSilah = null;
+            Tecrube = 0;
             HP_Stat = 1;
             STR_Stat = 1;
             DEX_Stat = 1;
+
+            // Başlangıç canı, statlardan hesaplanan MaksimumCan'a eşitlenir.
+            Can = MaksimumCan;
+            Envanter = new List<Oge>();
+            DonanimliSilah = null;
         }
 
         #region karakter seviye ve tecrube sistemi

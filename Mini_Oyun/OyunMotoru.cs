@@ -118,56 +118,56 @@ namespace Mini_Oyun
 
                     string secim = Console.ReadLine();
 
-                    // =====================
-                    // OYUNCU HAMLESİ
-                    // =====================
+                // =====================
+                // OYUNCU HAMLESİ
+                // =====================
 
-                    if (secim == "1")
+                if (secim == "1")
+                {
+                    Random random = new Random();
+
+                    
+                    int temelHasar = oyuncu.SaldiriGucu;
+
+                   
+                    int sapma = (int)(temelHasar * 0.15);
+                    int hamHasar = random.Next(temelHasar - sapma, temelHasar + sapma + 1);
+
+                    
+                    bool kritikVurduMu = false;
+                    if (random.Next(1, 101) <= oyuncu.KritikSans)
                     {
-                        int toplamSaldiri =
-                            oyuncu.SaldiriGucu +
-                            (oyuncu.DonanimliSilah?.EtkiDegeri ?? 0);
-
-                        int oyuncuHasar =
-                            random.Next(toplamSaldiri / 2, toplamSaldiri + 1);
-
-                        hedef.Can -= oyuncuHasar;
-
-                        if (hedef.Can < 0)
-                            hedef.Can = 0;
-
-                        Console.WriteLine(
-                            $"{oyuncu.Ad}, {hedef.Ad}'a {oyuncuHasar} hasar verdi!");
-
-                        Thread.Sleep(500);
-
-                        // ===== CANAVAR ÖLDÜ MÜ?
-                        if (!hedef.HayattaMi())
-                        {
-                            Console.WriteLine($"\n{hedef.Ad} öldü!");
-
-                            var dusenOgeler = hedef.OgeDusur();
-
-                            if (dusenOgeler != null && dusenOgeler.Count > 0)
-                            {
-                                Console.WriteLine("Şunları düşürdü:");
-
-                                foreach (var oge in dusenOgeler)
-                                {
-                                    Console.WriteLine($"- {oge.Ad}");
-                                    oyuncu.Envanter.Add(oge);
-                                }
-                            }
-
-                            Console.WriteLine($"{hedef.VerilenTecrube} tecrübe puanı kazandınız!");
-                            Console.WriteLine($"\n[TECRÜBE ÇUBUĞU]: {oyuncu.GetEXPBar()}");
-
-                            oyuncu.TecrubeKazan(hedef.VerilenTecrube);
-
-                            break; 
-                        }
+                        hamHasar *= 2;
+                        kritikVurduMu = true;
                     }
-                    else if (secim == "2")
+
+                    
+                    int netHasar = Math.Max(1, hamHasar - hedef.Savunma); 
+                    hedef.Can -= netHasar;
+
+                    
+                    if (kritikVurduMu)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Cyan;
+                        Console.WriteLine($"\n[MÜKEMMEL VURUŞ!] {oyuncu.Ad} kritik vurdu: {netHasar} hasar!");
+                        Console.ResetColor();
+                    }
+                    else
+                    {
+                        Console.WriteLine($"\n{oyuncu.Ad}, {hedef.Ad}'a {netHasar} hasar verdi.");
+                    }
+
+                    
+                    if (!hedef.HayattaMi())
+                    {
+                        Console.WriteLine($"\n{hedef.Ad} öldü!");
+                        oyuncu.TecrubeKazan(hedef.VerilenTecrube);
+                        Console.WriteLine($"\n[TECRÜBE ÇUBUĞU]: {oyuncu.GetEXPBar()}");
+                        break;
+                    }
+                }
+
+                else if (secim == "2")
                     {
                         Console.WriteLine("İksir sistemi burada çalışır...");
                         continue; // Tur bitmez
@@ -343,17 +343,20 @@ namespace Mini_Oyun
                 Console.WriteLine("========================================");
                 Console.WriteLine($" [SEVİYE]          : {oyuncu.Seviye}");
                 Console.WriteLine($" [CAN]             : {oyuncu.Can} / {oyuncu.MaksimumCan}");
+                Console.WriteLine($" [KRİTİK ŞANS]     : %{oyuncu.KritikSans}");
                 Console.WriteLine($" [İLERLEME]        : {oyuncu.GetEXPBar()}"); 
                 Console.WriteLine($" [SEVİYE TP]       : {oyuncu.Tecrube} / {gerekenToplamTecrube}");
                 Console.WriteLine($" [TOPLAM TP]       : {oyuncu.ToplamTecrube}"); 
                 Console.WriteLine($" [KALAN TP]        : Bir Sonraki Seviye İçin {kalanTecrube} TP lazım.");
 
+
                 Console.WriteLine("----------------------------------------");
                 Console.WriteLine("         TEMEL İSTATİSTİKLER  ");
                 Console.WriteLine("----------------------------------------");
-                Console.WriteLine($" [STR (Güç)]       : {oyuncu.STR_Stat}  -> (Hasar: {oyuncu.SaldiriGucu})");
                 Console.WriteLine($" [HP  (Can)]       : {oyuncu.HP_Stat}  -> (Max Can: {oyuncu.MaksimumCan})");
+                Console.WriteLine($" [STR (Güç)]       : {oyuncu.STR_Stat}  -> (Hasar: {oyuncu.SaldiriGucu})");
                 Console.WriteLine($" [DEX (Savunma)]   : {oyuncu.DEX_Stat}  -> (Zırh: {oyuncu.Savunma})");
+
 
                 Console.WriteLine("----------------------------------------");
                 Console.WriteLine($" [YETENEK PUANI]   : {oyuncu.YetenekPuani} (Harcanabilir)");

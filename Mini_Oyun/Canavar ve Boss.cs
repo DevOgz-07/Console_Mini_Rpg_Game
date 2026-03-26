@@ -20,6 +20,7 @@ namespace Mini_Oyun
             public int MaksimumCan { get; set; }
             public int SaldiriGucu { get; set; }
             public int VerilenTecrube { get; set; }
+            public int Savunma { get; set; } = 0;
             public int MinimumHasari { get; set; }
 
             public int MaksimumHasari { get; set; }
@@ -38,9 +39,12 @@ namespace Mini_Oyun
                 MaksimumCan = can;
                 SaldiriGucu = saldiri;
                 VerilenTecrube = exp;
+                Savunma = 5;
                 Turu = tur;
                 LootTableId = lootTableId;
-            }
+                MinimumHasari = (int)(saldiri * 0.8);
+                MaksimumHasari = (int)(saldiri * 1.2);
+        }
 
             public List<Oge> OgeDusur()
             {
@@ -51,22 +55,20 @@ namespace Mini_Oyun
         }
              public class Boss : Canavar
              {
-             public Boss(string ad, int hp, int minHasar, int maxHasar,int exp, string lootTableId)
-                : base(ad, hp, minHasar, maxHasar, CanavarTuru.Boss, lootTableId)
-        {
-                 Ad = ad;
-                 Can = hp;
-                 MaksimumCan = hp;
-                 VerilenTecrube = exp;
-                 MinimumHasari = minHasar;
-                 MaksimumHasari = maxHasar;
-                 LootTableId = lootTableId;
+      
+        
+            public Boss(string ad, int hp, int minHasar, int maxHasar, int exp, string lootTableId)
+                : base(ad, hp, (minHasar + maxHasar) / 2, exp, CanavarTuru.Boss, lootTableId)
+            {
+               
 
+                Savunma = 10; 
+                MinimumHasari = minHasar;
+                MaksimumHasari = maxHasar;
 
-
-             }
+                
+            }
         }
-
-
+    
 }
 

@@ -22,21 +22,22 @@ namespace Mini_Oyun
         {
             Console.WriteLine("------- Mini Rpg Oyununa Hoş Geldiniz -------");
 
-            Console.WriteLine("Karakter Adınızı Girin: ");
+            Console.Write("Karakter Adınızı Girin: ");
             string karakterAdi = Console.ReadLine();
 
-            Karakter oyuncu = new Karakter(karakterAdi, 100, 50);
+            
+            Karakter oyuncu = new Karakter(karakterAdi);
 
+            
             oyuncu.Envanter.Add(new Oge("Acemi Kılıcı", Nadirlik.Common, OgeTuru.Silah, 5));
             oyuncu.Envanter.Add(new Oge("Küçük Can İksiri", Nadirlik.Common, OgeTuru.Tuketilebilir, 20));
 
             Oyun_Motoru oyun = new Oyun_Motoru(oyuncu);
-
             oyun.OyunuBaslat();
 
-            Console.WriteLine("Oyun kapatıldı. Tekrar görüşmek üzere!");
-
+            Console.WriteLine("\nOyun kapatıldı. Tekrar görüşmek üzere!");
             Console.ReadKey();
         }
     }
 }
+
