@@ -10,14 +10,14 @@ namespace Mini_Oyun
 {
     internal class Oyun_Motoru
     {
-        public class OyunMotoru
-        {
+        
+       
             private Karakter oyuncu;
             private List<Canavar> canavarHavuzu; 
             private List<Boss> bossHavuzu; 
             private Random random = new Random();
 
-            public OyunMotoru(Karakter karakter)
+            public Oyun_Motoru(Karakter karakter)
             {
                 oyuncu = karakter;
                 canavarHavuzu = new List<Canavar>();
@@ -30,10 +30,12 @@ namespace Mini_Oyun
             {
                 canavarHavuzu.AddRange(CanavarVeritabani.TumCommonCanavarlar);
                 canavarHavuzu.AddRange(CanavarVeritabani.TumRareCanavarlar);
+                canavarHavuzu.AddRange(CanavarVeritabani.TumEpicCanavarlar);
+                canavarHavuzu.AddRange(CanavarVeritabani.TumLegendaryCanavarlar);
+                canavarHavuzu.AddRange(CanavarVeritabani.TumMythicCanavarlar);
+                
 
             }
-
-           
 
             private void BosslariOlustur()
             {
@@ -50,8 +52,9 @@ namespace Mini_Oyun
                     Console.WriteLine("\nNe yapmak istersiniz?");
                     Console.WriteLine("1. Canavarlarla savaş");
                     Console.WriteLine("2. Envanteri kontrol et ve öğe kullan");
-                    Console.WriteLine("3. Stat yükseltme menüsüne git");
-                    Console.WriteLine("3. Oyundan çık");
+                    Console.WriteLine("3. Karakter Ayrıntılarını Kontrol et");
+                    Console.WriteLine("4. Stat yükseltme menüsüne git");
+                    Console.WriteLine("0. Oyundan çık");
 
                     string secim = Console.ReadLine();
 
@@ -63,10 +66,13 @@ namespace Mini_Oyun
                         case "2":
                             EnvanterMenusu();
                             break;
-                        case "3": // Update
+                        case "3": // Yeni Karakter Ayrıntıları Menüsü
+                            KarakterAyrıntıları();
+                            break;
+                        case "4": // Yeni Stat Yükseltme Menüsü
                             StatYukseltmeMenusu();
                             break;
-                        case "4":
+                        case "0":
                             Console.WriteLine("Oyundan çıkılıyor...");
                             return;
                         default:
@@ -154,6 +160,7 @@ namespace Mini_Oyun
                             }
 
                             Console.WriteLine($"{hedef.VerilenTecrube} tecrübe puanı kazandınız!");
+                            Console.WriteLine($"\n[TECRÜBE ÇUBUĞU]: {oyuncu.GetEXPBar()}");
 
                             oyuncu.TecrubeKazan(hedef.VerilenTecrube);
 
@@ -252,53 +259,112 @@ namespace Mini_Oyun
                     Thread.Sleep(1000);
                 }
             }
+
             private void StatYukseltmeMenusu()
+        {
+            bool menudeyim = true;
+
+            while (menudeyim)
             {
-                while (oyuncu.YetenekPuani > 0)
+                Console.Clear();
+                Console.WriteLine($"\n--- STAT YÜKSELTME SİSTEMİ ---");
+                Console.WriteLine($"Kullanılabilir Puan: {oyuncu.YetenekPuani}");
+                Console.WriteLine("------------------------------");
+                Console.WriteLine($"1. HP  (Stat: {oyuncu.HP_Stat})  -> (+5 Max Can)");
+                Console.WriteLine($"2. STR (Stat: {oyuncu.STR_Stat}) -> (+2 Saldırı)");
+                Console.WriteLine($"3. DEX (Stat: {oyuncu.DEX_Stat}) -> (+1 Savunma)");
+                Console.WriteLine("\n[Çıkmak için 0'a basın]"); 
+
+                Console.Write("\nSeçiminiz: ");
+                string secim = Console.ReadLine();
+
+                if (secim == "0")
                 {
-                    Console.WriteLine($"\n--- STAT YÜKSELTME ---");
-                    Console.WriteLine($"Kullanılabilir Puan: {oyuncu.YetenekPuani}");
-                    Console.WriteLine($"Mevcut Statlar -> HP: {oyuncu.HP_Stat} | STR: {oyuncu.STR_Stat} | DEX: {oyuncu.DEX_Stat}");
-                    Console.WriteLine("Hangi statı yükseltmek istersiniz?");
-                    Console.WriteLine("1. HP (+5 Maksimum Can)");
-                    Console.WriteLine("2. STR (+2 Saldırı Gücü)");
-                    Console.WriteLine("3. DEX (+1 Savunma)");
-                    Console.WriteLine("0. Geri Dön");
-
-                    string secim = Console.ReadLine();
-
-                    if (secim == "1")
+                    menudeyim = false;
+                }
+                else if (secim == "1" || secim == "2" || secim == "3")
+                {
+                    
+                    if (oyuncu.YetenekPuani > 0)
                     {
-                        oyuncu.HP_Stat += 1;
-                        oyuncu.MaksimumCan += 5;
-                        oyuncu.Can = oyuncu.MaksimumCan; // HP artınca canı da güncelle
-                        oyuncu.YetenekPuani -= 1;
-                        Console.WriteLine("HP yükseltildi!");
-                    }
-                    else if (secim == "2")
-                    {
-                        oyuncu.STR_Stat += 1;
-                        oyuncu.SaldiriGucu += 2;
-                        oyuncu.YetenekPuani -= 1;
-                        Console.WriteLine("STR yükseltildi!");
-                    }
-                    else if (secim == "3")
-                    {
-                        oyuncu.DEX_Stat += 1;
-                        oyuncu.Savunma += 1;
-                        oyuncu.YetenekPuani -= 1;
-                        Console.WriteLine("DEX yükseltildi!");
-                    }
-                    else if (secim == "0")
-                    {
-                        break;
+                        if (secim == "1")
+                        {
+                            oyuncu.HP_Stat += 1;
+                            oyuncu.MaksimumCan += 5;
+                            oyuncu.Can = oyuncu.MaksimumCan; 
+                            oyuncu.YetenekPuani -= 1;
+                            Console.WriteLine("\n[+] HP başarıyla yükseltildi!");
+                        }
+                        else if (secim == "2")
+                        {
+                            oyuncu.STR_Stat += 1;
+                            oyuncu.SaldiriGucu += 2;
+                            oyuncu.YetenekPuani -= 1;
+                            Console.WriteLine("\n[+] STR başarıyla yükseltildi!");
+                        }
+                        else if (secim == "3")
+                        {
+                            oyuncu.DEX_Stat += 1;
+                            oyuncu.Savunma += 1;
+                            oyuncu.YetenekPuani -= 1;
+                            Console.WriteLine("\n[+] DEX başarıyla yükseltildi!");
+                        }
                     }
                     else
                     {
-                        Console.WriteLine("Geçersiz seçim!");
+                        
+                        Console.WriteLine("\n[!] Yetersiz yetenek puanı! Stat yükseltemezsiniz.");
                     }
+
+                    Console.WriteLine("\nDevam etmek için bir tuşa basın...");
+                    Console.ReadKey();
+                }
+                else
+                {
+                    
+                    Console.WriteLine("\n[!] Yanlış işlem yaptınız! Lütfen geçerli bir seçim yapın.");
+                    Console.WriteLine("Menüye yönlendiriliyorsunuz...");
+                    Thread.Sleep(1500); // 1.5 saniye bekleyip menüye döner
                 }
             }
-        }
+        }  
+           
+            private void KarakterAyrıntıları()
+            {
+                Console.Clear(); // Ekranı temizleyerek daha derli toplu bir görüntü sunalım
+
+               
+                
+                int gerekenToplamTecrube = oyuncu.Seviye * 100;
+                int kalanTecrube = gerekenToplamTecrube - oyuncu.Tecrube;
+
+                Console.WriteLine("========================================");
+                Console.WriteLine($"        KARAKTER PROFİLİ: {oyuncu.Ad.ToUpper()} ");
+                Console.WriteLine("========================================");
+                Console.WriteLine($" [SEVİYE]         : {oyuncu.Seviye}");
+                Console.WriteLine($" [CAN]            : {oyuncu.Can} / {oyuncu.MaksimumCan}");
+                Console.WriteLine($" [TECRÜBE]        : {oyuncu.Tecrube} / {gerekenToplamTecrube}");
+                Console.WriteLine($" [KALAN TP]       : Bir Sonraki Seviye İçin {kalanTecrube} TP lazım.");
+                Console.WriteLine($" [İLERLEME]       : {oyuncu.GetEXPBar()}");
+
+                Console.WriteLine("----------------------------------------");
+                Console.WriteLine("         TEMEL İSTATİSTİKLER  ");
+                Console.WriteLine("----------------------------------------");
+                Console.WriteLine($" [STR (Güç)]      : {oyuncu.STR_Stat}  -> (Hasar: {oyuncu.SaldiriGucu})");
+                Console.WriteLine($" [HP  (Can)]      : {oyuncu.HP_Stat}  -> (Max Can: {oyuncu.MaksimumCan})");
+                Console.WriteLine($" [DEX (Savunma)]  : {oyuncu.DEX_Stat}  -> (Zırh: {oyuncu.Savunma})");
+
+                Console.WriteLine("----------------------------------------");
+                Console.WriteLine($" [YETENEK PUANI]  : {oyuncu.YetenekPuani} (Harcanabilir)");
+                Console.WriteLine("========================================");
+
+                // Donanımlı Eşya Var mı?
+                string silahAdi = oyuncu.DonanimliSilah != null ? oyuncu.DonanimliSilah.Ad : "Yok";
+                Console.WriteLine($" [KUŞANILMIŞ SİLAH]: {silahAdi}");
+
+                Console.WriteLine("\nAna menüye dönmek için bir tuşa basın...");
+                Console.ReadKey();
+            }
+        
     }
 }

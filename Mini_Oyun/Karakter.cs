@@ -12,13 +12,13 @@ namespace Mini_Oyun
         public int Can { get; set; }
         public int MaksimumCan { get; set; }
         public int SaldiriGucu { get; set; }
-        public int Savunma { get; set; } // DEX'ten gelen savunma puanı
-        public int Tecrube { get; set; }
+        public int Savunma { get; set; }
+        public int Tecrube { get; set; } // Toplam biriken EXP (Asla sıfırlanmaz)
         public int Seviye { get; set; }
+        
         public List<Oge> Envanter { get; set; }
         public Oge DonanimliSilah { get; set; }
 
-        // --- Temel Statlar ---
         public int YetenekPuani { get; set; } = 0;
         public int HP_Stat { get; set; }
         public int STR_Stat { get; set; }
@@ -30,42 +30,74 @@ namespace Mini_Oyun
             MaksimumCan = baslangicCan;
             Can = baslangicCan;
             SaldiriGucu = baslangicSaldiri;
-            Savunma = 0; // Başlangıç savunması
+            Savunma = 0;
             Tecrube = 0;
             Seviye = 1;
             Envanter = new List<Oge>();
             DonanimliSilah = null;
-
-            // Statları başlangıçta 1 olarak kabul edelim (veya istediğin değer)
             HP_Stat = 1;
             STR_Stat = 1;
             DEX_Stat = 1;
         }
 
+
+        public int SonrakiSeviyeIcinGerekenToplamEXP()
+        {
+            
+            if (Seviye == 1) return 100;
+
+           
+            return 300 * (int)Math.Pow(2, Seviye - 2);
+        }
+
+        public int MevcutSeviyeBaslangicEXP()
+        {
+            
+            return 0;
+        }
+
+        public void TecrubeKazan(int miktar)
+        {
+            Tecrube += miktar;
+            Console.WriteLine($"\n[+] {miktar} tecrübe puanı kazandınız.");
+
+            
+            while (Tecrube >= SonrakiSeviyeIcinGerekenToplamEXP())
+            {
+                int gereken = SonrakiSeviyeIcinGerekenToplamEXP();
+                Tecrube -= gereken; 
+                SeviyeAtla();
+            }
+        }
+
         public void SeviyeAtla()
         {
             Seviye++;
-            YetenekPuani += 1; // Her seviyede 1 puan veriyoruz
+            YetenekPuani += 1;
+            Can = MaksimumCan; 
 
-            // Seviye atlayınca canı hala tazeleyebiliriz (opsiyonel)
-            Can = MaksimumCan;
-
-            Console.WriteLine($"\n*** TEBRİKLER! {Seviye}. Seviyeye Ulaştınız! ***");
+            Console.WriteLine($"\n*** TEBRİKLER! Seviye Atladınız: {Seviye} ***");
             Console.WriteLine("1 Yeni Yetenek Puanı Kazandınız!");
         }
 
-        public void TecrubeKazan(int kazanilanTecrube)
-        {
-            Tecrube += kazanilanTecrube;
-            // Dinamik seviye zorluğu
-            int sonrakiSeviyeTecrube = Seviye * 100;
 
-            while (Tecrube >= sonrakiSeviyeTecrube)
-            {
-                Tecrube -= sonrakiSeviyeTecrube;
-                SeviyeAtla();
-                sonrakiSeviyeTecrube = Seviye * 100;
-            }
+        public string GetEXPBar()
+        {
+            int ust = SonrakiSeviyeIcinGerekenToplamEXP();
+            int alt = MevcutSeviyeBaslangicEXP(); 
+
+           
+            double oran = (double)(Tecrube - alt) / (ust - alt);
+
+            if (oran < 0) oran = 0;
+            if (oran > 1) oran = 1;
+
+            int barGenisligi = 20;
+            int dolu = (int)(oran * barGenisligi);
+
+            
+            string bar = new string('█', dolu) + new string('░', barGenisligi - dolu);
+            return $"[{bar}] %{(int)(oran * 100)}";
         }
 
         public void EnvanteriGoster()
