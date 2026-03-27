@@ -87,36 +87,36 @@ namespace Mini_Oyun
 
             private void SavasBaslat()
             {
-                Canavar hedef;
+               Canavar hedef;
 
-                if (random.Next(0, 100) < 15 && bossHavuzu.Any())
-                {
-                    hedef = bossHavuzu[random.Next(bossHavuzu.Count)];
-                    Console.WriteLine($"\nDevasa bir düşman belirdi: {hedef.Ad}!");
-                }
-                else
-                {
-                    hedef = canavarHavuzu[random.Next(canavarHavuzu.Count)];
-                    Console.WriteLine($"\nBir {hedef.Ad} ile karşılaştınız!");
-                }
+               if (random.Next(0, 100) < 15 && bossHavuzu.Any())
+            {
+                hedef = bossHavuzu[random.Next(bossHavuzu.Count)];
+                Console.WriteLine($"\nDevasa bir düşman belirdi: {hedef.Ad}!");
+            }
+               else
+            {
+                hedef = canavarHavuzu[random.Next(canavarHavuzu.Count)];
+                Console.WriteLine($"\nBir {hedef.Ad} ile karşılaştınız!");
+            }
 
-                hedef.Can = hedef.MaksimumCan;
+               hedef.Can = hedef.MaksimumCan;
 
-                Console.WriteLine($"Can: {hedef.Can}, Saldırı Gücü: {hedef.SaldiriGucu}");
-                Thread.Sleep(1000);
+               Console.WriteLine($"Can: {hedef.Can}, Saldırı Gücü: {hedef.SaldiriGucu}");
+               Thread.Sleep(1000);
 
-                while (oyuncu.HayattaMi() && hedef.HayattaMi())
-                {
-                    Console.WriteLine("\n--- Savaş Devam Ediyor ---");
-                    Console.WriteLine(
-                        $"Oyuncu Can: {oyuncu.Can}/{oyuncu.MaksimumCan} | " +
-                        $"{hedef.Ad} Can: {hedef.Can}/{hedef.MaksimumCan}");
+              while (oyuncu.HayattaMi() && hedef.HayattaMi())
+            {
+                Console.WriteLine("\n--- Savaş Devam Ediyor ---");
+                Console.WriteLine(
+                    $"Oyuncu Can: {oyuncu.Can}/{oyuncu.MaksimumCan} | " +
+                    $"{hedef.Ad} Can: {hedef.Can}/{hedef.MaksimumCan}");
 
-                    Console.WriteLine("1. Saldır");
-                    Console.WriteLine("2. İksir kullan");
-                    Console.WriteLine("3. Kaç");
+                Console.WriteLine("1. Saldır");
+                Console.WriteLine("2. İksir kullan");
+                Console.WriteLine("3. Kaç");
 
-                    string secim = Console.ReadLine();
+                string secim = Console.ReadLine();
 
                 // =====================
                 // OYUNCU HAMLESİ
@@ -126,14 +126,14 @@ namespace Mini_Oyun
                 {
                     Random random = new Random();
 
-                    
+
                     int temelHasar = oyuncu.SaldiriGucu;
 
-                   
+
                     int sapma = (int)(temelHasar * 0.15);
                     int hamHasar = random.Next(temelHasar - sapma, temelHasar + sapma + 1);
 
-                    
+
                     bool kritikVurduMu = false;
                     if (random.Next(1, 101) <= oyuncu.KritikSans)
                     {
@@ -141,11 +141,11 @@ namespace Mini_Oyun
                         kritikVurduMu = true;
                     }
 
-                    
-                    int netHasar = Math.Max(1, hamHasar - hedef.Savunma); 
+
+                    int netHasar = Math.Max(1, hamHasar - hedef.Savunma);
                     hedef.Can -= netHasar;
 
-                    
+
                     if (kritikVurduMu)
                     {
                         Console.ForegroundColor = ConsoleColor.Cyan;
@@ -157,7 +157,7 @@ namespace Mini_Oyun
                         Console.WriteLine($"\n{oyuncu.Ad}, {hedef.Ad}'a {netHasar} hasar verdi.");
                     }
 
-                    
+
                     if (!hedef.HayattaMi())
                     {
                         Console.WriteLine($"\n{hedef.Ad} öldü!");
@@ -168,70 +168,105 @@ namespace Mini_Oyun
                 }
 
                 else if (secim == "2")
+                {
+                    Console.WriteLine("İksir sistemi burada çalışır...");
+                    continue; // Tur bitmez
+                }
+                else if (secim == "3")
+                {
+                    if (random.Next(100) < 40)
                     {
-                        Console.WriteLine("İksir sistemi burada çalışır...");
-                        continue; // Tur bitmez
-                    }
-                    else if (secim == "3")
-                    {
-                        if (random.Next(100) < 40)
-                        {
-                            Console.WriteLine("Savaştan kaçtınız!");
-                            return;
-                        }
-                        else
-                        {
-                            Console.WriteLine("Kaçamadınız!");
-                            Thread.Sleep(500);
-                        }
+                        Console.WriteLine("Savaştan kaçtınız!");
+                        return;
                     }
                     else
                     {
-                        Console.WriteLine("Geçersiz seçim.");
-                        continue;
-                    }
-
-                    // =====================
-                    // CANAVAR KARŞI SALDIRI
-                    // =====================
-
-                    if (hedef.HayattaMi())
-                    {
-                        int hamHasar;
-
-                        // 1. Hasar Belirleme (Boss ise kendi aralığını, normal ise SaldiriGucu'nu kullanır)
-                        if (hedef is Boss boss)
-                        {
-                            hamHasar = random.Next(boss.MinimumHasari, boss.MaksimumHasari + 1);
-                        }
-                        else
-                        {
-                            hamHasar = random.Next(hedef.SaldiriGucu / 2, hedef.SaldiriGucu + 1);
-                        }
-
-                        
-                        int gercekHasar = Math.Max(0, hamHasar - oyuncu.Savunma);
-
-                        oyuncu.Can -= gercekHasar;
-
-                        if (gercekHasar > 0)
-                        {
-                            Console.WriteLine($"{hedef.Ad}, size {gercekHasar} hasar verdi! (Savunma ile {hamHasar - gercekHasar} hasar engellendi)");
-                        }
-                        else
-                        {
-                            Console.WriteLine($"{hedef.Ad} saldırdı ama savunmanız sayesinde hiç hasar almadınız!");
-                        }
-
+                        Console.WriteLine("Kaçamadınız!");
                         Thread.Sleep(500);
-
-                        if (!oyuncu.HayattaMi())
-                        {
-                            Console.WriteLine("Karakteriniz savaşta yenildi!");
-                            break;
-                        }
                     }
                 }
+                else
+                {
+                    Console.WriteLine("Geçersiz seçim.");
+                    continue;
+                }
+
+                // =====================
+                // CANAVAR KARŞI SALDIRI
+                // =====================
+
+                if (hedef.HayattaMi() && oyuncu.HayattaMi()) // Yeniden Doğuş sistemi için ek kontrol
+                {
+                    int hamHasar;
+
+                    
+                    if (hedef is Boss boss)
+                    {
+                        hamHasar = random.Next(boss.MinimumHasari, boss.MaksimumHasari + 1);
+                    }
+                    else
+                    {
+                       
+                        hamHasar = random.Next(hedef.SaldiriGucu / 2, hedef.SaldiriGucu + 1);
+                    }
+
+                    
+                    int gercekHasar = Math.Max(0, hamHasar - oyuncu.Savunma);
+                    oyuncu.Can -= gercekHasar;
+
+                    
+                    if (gercekHasar > 0)
+                    {
+                        Console.WriteLine($"\n{hedef.Ad}, size {gercekHasar} hasar verdi! (Savunma ile {hamHasar - gercekHasar} engellendi)");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"\n{hedef.Ad} saldırdı ama zırhını geçemedi!");
+                    }
+
+                    Thread.Sleep(800);
+
+                    // =====================
+                    // OYUNCU ÖLDÜ MÜ? (Yeniden Doğma)
+                    // =====================
+                    if (oyuncu.Can <= 0)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine("\n[YENİLDİNİZ!] Karanlık her yeri kaplıyor...");
+                        Console.ResetColor();
+
+                        Thread.Sleep(1500);
+                        Console.Clear();
+
+                        Console.WriteLine("===========================================");
+                        Console.WriteLine("   YARALARINIZ SARILIYOR, BEKLEYİN...      ");
+                        Console.WriteLine("===========================================");
+
+                        int hedefCan = oyuncu.MaksimumCan / 2; // %50 can hedefi
+                        oyuncu.Can = 0;
+
+                        while (oyuncu.Can < hedefCan)
+                        {
+                            int artis = Math.Max(1, oyuncu.MaksimumCan / 10);
+                            oyuncu.Can += artis;
+                            if (oyuncu.Can > hedefCan) oyuncu.Can = hedefCan;
+
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.Write("█ ");
+                            Console.ResetColor();
+
+                            Thread.Sleep(600); 
+                        }
+
+                        Console.WriteLine($"\n\n[!] Gözlerinizi açtınız. Can: {oyuncu.Can}/{oyuncu.MaksimumCan}");
+                        Console.WriteLine("Güvenli bölgeye döndünüz.");
+                        Console.WriteLine("===========================================\n");
+
+                        Thread.Sleep(2000);
+                        return; 
+                    }
+                }
+              }
             }
 
             private void EnvanterMenusu()

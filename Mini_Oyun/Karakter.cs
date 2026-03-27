@@ -23,7 +23,7 @@ namespace Mini_Oyun
 
         // --- DİNAMİK HESAPLANAN ÖZELLİKLER ---
         // Bu kısımlar statlar arttığında otomatik güncellenir.
-        public int MaksimumCan { get; set; } = 350;
+        public int MaksimumCan { get; set; } = 200;
         public int SaldiriGucu { get; set; } = 25;
         public int Savunma { get; set; } = 1;
 
