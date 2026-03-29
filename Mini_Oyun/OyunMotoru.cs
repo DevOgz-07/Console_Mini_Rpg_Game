@@ -4,27 +4,77 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Text.Json; 
+using System.IO;        
 
 
 namespace Mini_Oyun
 {
     internal class Oyun_Motoru
     {
-        
-       
-            private Karakter oyuncu;
-            private List<Canavar> canavarHavuzu; 
-            private List<Boss> bossHavuzu; 
-            private Random random = new Random();
+        private Karakter oyuncu;
+        private List<Canavar> canavarHavuzu;
+        private List<Boss> bossHavuzu;
+        private Random random = new Random();
 
-            public Oyun_Motoru(Karakter karakter)
+        public void SetOyuncu(Karakter k) { this.oyuncu = k; }
+
+        
+        public Oyun_Motoru()
+        {
+            canavarHavuzu = new List<Canavar>();
+            bossHavuzu = new List<Boss>();
+            CanavarlariOlustur();
+            BosslariOlustur();
+        }
+
+        public Oyun_Motoru(Karakter karakter) : this() 
+        {
+            oyuncu = karakter;
+        }
+
+            public string SifreOku()
+        {
+            string sifre = "";
+            ConsoleKeyInfo tus;
+            do
             {
-                oyuncu = karakter;
-                canavarHavuzu = new List<Canavar>();
-                bossHavuzu = new List<Boss>();
-                CanavarlariOlustur();
-                BosslariOlustur();
+                tus = Console.ReadKey(true);
+                if (tus.Key != ConsoleKey.Backspace && tus.Key != ConsoleKey.Enter)
+                {
+                    sifre += tus.KeyChar;
+                    Console.Write("*");
+                }
+                else if (tus.Key == ConsoleKey.Backspace && sifre.Length > 0)
+                {
+                    sifre = sifre.Substring(0, (sifre.Length - 1));
+                    Console.Write("\b \b");
+                }
+            } while (tus.Key != ConsoleKey.Enter);
+            Console.WriteLine();
+            return sifre;
+        }
+
+            public void OyunuKaydet(Karakter k)
+            {
+            if (k == null) return;
+            string dosyaAdi = $"{k.Ad}_kayit.json";
+            var secenekler = new JsonSerializerOptions { WriteIndented = true };
+            string jsonVerisi = JsonSerializer.Serialize(k, secenekler);
+            File.WriteAllText(dosyaAdi, jsonVerisi);
+            
             }
+
+            public Karakter OyunuYukle(string ad)
+        {
+            string dosyaAdi = $"{ad}_kayit.json";
+            if (File.Exists(dosyaAdi))
+            {
+                string jsonVerisi = File.ReadAllText(dosyaAdi);
+                return JsonSerializer.Deserialize<Karakter>(jsonVerisi);
+            }
+            return null;
+        }
 
             private void CanavarlariOlustur()
             {
@@ -105,12 +155,16 @@ namespace Mini_Oyun
                Console.WriteLine($"Can: {hedef.Can}, Saldırı Gücü: {hedef.SaldiriGucu}");
                Thread.Sleep(1000);
 
-              while (oyuncu.HayattaMi() && hedef.HayattaMi())
+            while (oyuncu.HayattaMi() && hedef.HayattaMi())
             {
                 Console.WriteLine("\n--- Savaş Devam Ediyor ---");
-                Console.WriteLine(
-                    $"Oyuncu Can: {oyuncu.Can}/{oyuncu.MaksimumCan} | " +
-                    $"{hedef.Ad} Can: {hedef.Can}/{hedef.MaksimumCan}");
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.Write($"Oyuncu Can: {oyuncu.Can}/{oyuncu.MaksimumCan} ");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.Write("| ");
+                Console.ForegroundColor = ConsoleColor.Magenta;
+                Console.WriteLine($"{hedef.Ad} Can: {hedef.Can}/{hedef.MaksimumCan}");
+                Console.ResetColor();
 
                 Console.WriteLine("1. Saldır");
                 Console.WriteLine("2. İksir kullan");
@@ -148,30 +202,146 @@ namespace Mini_Oyun
 
                     if (kritikVurduMu)
                     {
+                        Console.WriteLine(); 
+                        Console.ForegroundColor = ConsoleColor.Black;     
+                        Console.BackgroundColor = ConsoleColor.Cyan;      
+                        Console.Write(" [!!! MÜKEMMEL VURUŞ !!!] ");     
+                        Console.ResetColor();                             
+
                         Console.ForegroundColor = ConsoleColor.Cyan;
-                        Console.WriteLine($"\n[MÜKEMMEL VURUŞ!] {oyuncu.Ad} kritik vurdu: {netHasar} hasar!");
+                        Console.WriteLine($"\n{oyuncu.Ad} tam kalbinden vurdu: {netHasar} HASAR!");
                         Console.ResetColor();
                     }
                     else
                     {
+                        
+                        Console.ForegroundColor = ConsoleColor.Gray;
                         Console.WriteLine($"\n{oyuncu.Ad}, {hedef.Ad}'a {netHasar} hasar verdi.");
+                        Console.ResetColor();
                     }
 
 
                     if (!hedef.HayattaMi())
                     {
-                        Console.WriteLine($"\n{hedef.Ad} öldü!");
-                        oyuncu.TecrubeKazan(hedef.VerilenTecrube);
-                        Console.WriteLine($"\n[TECRÜBE ÇUBUĞU]: {oyuncu.GetEXPBar()}");
+                        Console.Clear(); 
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine("===========================================");
+                        Console.WriteLine("           SAVAŞ SONUCU (ZAFER!)           ");
+                        Console.WriteLine("===========================================");
+                        Console.ResetColor();
+
+                        
+                        int kazanilanExp = hedef.VerilenTecrube;
+                        oyuncu.TecrubeKazan(kazanilanExp);
+                        int kazanilanAltin = new Random().Next(15, 51);
+                        oyuncu.Altın += kazanilanAltin;
+
+
+
+                        Console.Write($"Kazanılan EXP:  ");
+                        Console.ForegroundColor = ConsoleColor.Cyan;
+                        Console.Write($" +{kazanilanExp} ");
+                        Console.ForegroundColor = ConsoleColor.DarkGray;
+                        Console.WriteLine($"[Bar: {oyuncu.GetEXPBar()}]"); 
+                        Console.ResetColor();
+
+                        Console.Write($"Kazanılan ALTIN: ");
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine($"💰+{kazanilanAltin} Altın");
+                        Console.ResetColor();
+
+
+
+                        Oge dusenEsya = RastgeleOgeUret();
+
+                        if (dusenEsya != null)
+                        {
+                            Console.Write("Düşen Eşya:    ");
+
+                            
+                            if (dusenEsya.Nadirlik == Nadirlik.Mythic)
+                            {
+                                Console.Beep();
+                                Console.BackgroundColor = ConsoleColor.DarkRed;
+                                Console.ForegroundColor = ConsoleColor.White;
+                                Console.Write($"[!] {dusenEsya.Ad.ToUpper()} [!] ");
+                            }
+                            else
+                            {
+                                
+                                Console.ForegroundColor = Oge.NadirlikRengiGetir(dusenEsya.Nadirlik);
+                                Console.Write($"[{dusenEsya.Nadirlik}] {dusenEsya.Ad}");
+                            }
+
+                            Console.ResetColor();
+                            Console.ForegroundColor = ConsoleColor.DarkGray;
+
+                            
+                            string birim = dusenEsya.Tur == OgeTuru.Silah ? "Saldırı" : (dusenEsya.Tur == OgeTuru.Zirh ? "Savunma" : "Can");
+                            Console.WriteLine($" (+{dusenEsya.EtkiDegeri} {birim})");
+                            Console.ResetColor();
+
+                            oyuncu.Envanter.Add(dusenEsya);
+                        }
+                        else
+                        {
+                            Console.WriteLine(" Düşen Eşya:    Yok");
+                        }
+
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine("===========================================");
+                        Console.ResetColor();
+
+                        if (!oyuncu.Ad.StartsWith("Misafir_"))
+                        {
+                            OyunuKaydet(oyuncu);
+                            Console.ForegroundColor = ConsoleColor.DarkGreen;
+                            Console.WriteLine($"[SİSTEM]: {oyuncu.Ad} başarıyla kaydedildi.");
+                            Console.WriteLine("[!] İlerleme ve ganimetler başarıyla kaydedildi.");
+                        }
+                        else
+                        {
+                            Console.ForegroundColor = ConsoleColor.Yellow;
+                            Console.WriteLine(" [BİLGİ]: Misafir modundasınız, ilerlemeniz bu oturum kapanınca silinecek.");
+                        }
+                        Console.ResetColor();
                         break;
                     }
+                    
                 }
+                
 
                 else if (secim == "2")
                 {
-                    Console.WriteLine("İksir sistemi burada çalışır...");
-                    continue; // Tur bitmez
+                    
+                    var iksir = oyuncu.Envanter.FirstOrDefault(x => x.Ad.Contains("İksir"));
+
+                    if (iksir != null)
+                    {
+                        int eskiCan = oyuncu.Can;
+                        oyuncu.Can += iksir.EtkiDegeri;
+
+                        
+                        if (oyuncu.Can > oyuncu.MaksimumCan)
+                            oyuncu.Can = oyuncu.MaksimumCan;
+
+                        int iyilesme = oyuncu.Can - eskiCan;
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine($"\n[İKSİR] {iksir.Ad} kullandınız! {iyilesme} HP yenilendi.");
+                        Console.ResetColor();
+
+
+                        oyuncu.Envanter.Remove(iksir);
+
+                        
+                    }
+                    else
+                    {
+                        Console.WriteLine("\n[!] Envanterinizde hiç iksir yok!");
+                        continue; 
+                    }
                 }
+                
                 else if (secim == "3")
                 {
                     if (random.Next(100) < 40)
@@ -195,36 +365,48 @@ namespace Mini_Oyun
                 // CANAVAR KARŞI SALDIRI
                 // =====================
 
-                if (hedef.HayattaMi() && oyuncu.HayattaMi()) // Yeniden Doğuş sistemi için ek kontrol
+                if (hedef.HayattaMi() && oyuncu.HayattaMi())
                 {
                     int hamHasar;
 
-                    
                     if (hedef is Boss boss)
                     {
                         hamHasar = random.Next(boss.MinimumHasari, boss.MaksimumHasari + 1);
                     }
                     else
                     {
-                       
                         hamHasar = random.Next(hedef.SaldiriGucu / 2, hedef.SaldiriGucu + 1);
                     }
 
                     
-                    int gercekHasar = Math.Max(0, hamHasar - oyuncu.Savunma);
-                    oyuncu.Can -= gercekHasar;
+                    int ekSavunma = (oyuncu.MevcutZirh != null) ? oyuncu.MevcutZirh.EtkiDegeri : 0;
+                    int toplamSavunma = oyuncu.Savunma + ekSavunma;
 
+                    int gercekHasar = Math.Max(0, hamHasar - toplamSavunma);
+                    oyuncu.Can -= gercekHasar;
                     
+
                     if (gercekHasar > 0)
                     {
-                        Console.WriteLine($"\n{hedef.Ad}, size {gercekHasar} hasar verdi! (Savunma ile {hamHasar - gercekHasar} engellendi)");
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.Write($"\n{hedef.Ad}");
+                        Console.ForegroundColor = ConsoleColor.White;
+                        Console.WriteLine($", size {gercekHasar} hasar verdi!");
+
+                        Console.ForegroundColor = ConsoleColor.DarkGray;
+                        
+                        Console.WriteLine($"(Savunma [{toplamSavunma}] ile {hamHasar - gercekHasar} hasar engellendi)");
+                        Console.ResetColor();
                     }
                     else
                     {
-                        Console.WriteLine($"\n{hedef.Ad} saldırdı ama zırhını geçemedi!");
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine($"\n{hedef.Ad} saldırdı ama çelik gibi savunmanız ({toplamSavunma}) sayesinde hiç hasar almadınız!");
+                        Console.ResetColor();
                     }
+                }
 
-                    Thread.Sleep(800);
+                Thread.Sleep(800);
 
                     // =====================
                     // OYUNCU ÖLDÜ MÜ? (Yeniden Doğma)
@@ -238,24 +420,32 @@ namespace Mini_Oyun
                         Thread.Sleep(1500);
                         Console.Clear();
 
+                        
+                        Console.ForegroundColor = ConsoleColor.Red;
                         Console.WriteLine("===========================================");
-                        Console.WriteLine("   YARALARINIZ SARILIYOR, BEKLEYİN...      ");
+                        Console.WriteLine("          SAVAŞ SONUCU (BOZGUN)            ");
+                        Console.WriteLine("===========================================");
+                        Console.ResetColor();
+                        Console.WriteLine("    YARALARINIZ SARILIYOR, BEKLEYİN...     ");
                         Console.WriteLine("===========================================");
 
-                        int hedefCan = oyuncu.MaksimumCan / 2; // %50 can hedefi
+                        int hedefCan = oyuncu.MaksimumCan / 2;
                         oyuncu.Can = 0;
 
+                        
                         while (oyuncu.Can < hedefCan)
                         {
-                            int artis = Math.Max(1, oyuncu.MaksimumCan / 10);
+                            
+                            int artis = Math.Max(15, oyuncu.MaksimumCan / 75);
                             oyuncu.Can += artis;
+
                             if (oyuncu.Can > hedefCan) oyuncu.Can = hedefCan;
 
                             Console.ForegroundColor = ConsoleColor.Green;
-                            Console.Write("█ ");
+                            Console.Write("█ "); 
                             Console.ResetColor();
 
-                            Thread.Sleep(600); 
+                            Thread.Sleep(600);
                         }
 
                         Console.WriteLine($"\n\n[!] Gözlerinizi açtınız. Can: {oyuncu.Can}/{oyuncu.MaksimumCan}");
@@ -263,12 +453,11 @@ namespace Mini_Oyun
                         Console.WriteLine("===========================================\n");
 
                         Thread.Sleep(2000);
-                        return; 
+                        break; 
                     }
                 }
-              }
             }
-
+              
             private void EnvanterMenusu()
             {
                 while (true)
@@ -378,6 +567,9 @@ namespace Mini_Oyun
                 Console.WriteLine("========================================");
                 Console.WriteLine($" [SEVİYE]          : {oyuncu.Seviye}");
                 Console.WriteLine($" [CAN]             : {oyuncu.Can} / {oyuncu.MaksimumCan}");
+                Console.WriteLine($" [SALDIRI GÜCÜ]    : {oyuncu.SaldiriGucu}");
+                Console.WriteLine($" [SAVUNMA]         : {oyuncu.Savunma}");
+                Console.WriteLine($" [ALTIN]           : {oyuncu.Altın}");
                 Console.WriteLine($" [KRİTİK ŞANS]     : %{oyuncu.KritikSans}");
                 Console.WriteLine($" [İLERLEME]        : {oyuncu.GetEXPBar()}"); 
                 Console.WriteLine($" [SEVİYE TP]       : {oyuncu.Tecrube} / {gerekenToplamTecrube}");
@@ -397,13 +589,76 @@ namespace Mini_Oyun
                 Console.WriteLine($" [YETENEK PUANI]   : {oyuncu.YetenekPuani} (Harcanabilir)");
                 Console.WriteLine("========================================");
 
-                
-                string silahAdi = oyuncu.DonanimliSilah != null ? oyuncu.DonanimliSilah.Ad : "Yok";
-                Console.WriteLine($" [KUŞANILMIŞ SİLAH]: {silahAdi}");
+
+                // Silah Satırı
+                string silahBilgi = oyuncu.DonanimliSilah != null
+                ? $"{oyuncu.DonanimliSilah.Ad} (+{oyuncu.DonanimliSilah.EtkiDegeri} Saldırı)"
+                : "Yok";
+
+                // Zırh Satırı
+                string zirhBilgi = oyuncu.MevcutZirh != null
+                ? $"{oyuncu.MevcutZirh.Ad} (+{oyuncu.MevcutZirh.EtkiDegeri} Savunma)"
+                : "Yok";
+
+                Console.WriteLine($" [KUŞANILMIŞ SİLAH]: {silahBilgi}");
+                Console.WriteLine($" [KUŞANILMIŞ ZIRH] : {zirhBilgi}");
+                Console.WriteLine("========================================");
+
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($" TOPLAM SALDIRI GÜCÜ : {oyuncu.SaldiriGucu}");
+
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine($" TOPLAM SAVUNMA GÜCÜ : {oyuncu.Savunma}");
+                Console.ResetColor();
 
                 Console.WriteLine("\nAna menüye dönmek için bir tuşa basın...");
                 Console.ReadKey();
             }
-        
+
+            public Oge RastgeleOgeUret()
+            {
+               Random rnd = new Random();
+               int sans = rnd.Next(1, 101); 
+
+            
+               Nadirlik secilenNadirlik;
+
+                if (sans <= 1) secilenNadirlik = Nadirlik.Mythic;    
+                else if (sans <= 5) secilenNadirlik = Nadirlik.Legendary; 
+                else if (sans <= 15) secilenNadirlik = Nadirlik.Epic;      
+                else if (sans <= 35) secilenNadirlik = Nadirlik.Rare;      
+                else if (sans <= 65) secilenNadirlik = Nadirlik.Uncommon;  
+                else secilenNadirlik = Nadirlik.Common;    
+
+            
+               OgeTuru secilenTur = (OgeTuru)rnd.Next(0, 3); 
+
+            
+               string esyaAdı = "";
+               int etki = 0;
+
+            
+               int nadirlikCarpani = (int)secilenNadirlik + 1;
+
+               switch (secilenTur)
+               {
+                  case OgeTuru.Silah:
+                    esyaAdı = $"{secilenNadirlik} Kılıç";
+                    etki = rnd.Next(5, 11) * nadirlikCarpani; 
+                    break;
+                  case OgeTuru.Zirh:
+                    esyaAdı = $"{secilenNadirlik} Zırh";
+                    etki = rnd.Next(2, 6) * nadirlikCarpani;
+                    break;
+                  case OgeTuru.Tuketilebilir:
+                    esyaAdı = $"{secilenNadirlik} İksir";
+                    etki = rnd.Next(15, 26) * nadirlikCarpani;
+                    break;
+               }
+
+            
+               return new Oge(esyaAdı, secilenNadirlik, secilenTur, etki);
+            }
+
     }
 }

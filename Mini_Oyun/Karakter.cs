@@ -8,10 +8,11 @@ namespace Mini_Oyun
 {
     internal class Karakter
     {
+        public string Sifre { get; set; }
         public string Ad { get; set; }
         public int Can { get; set; }
         public int Tecrube { get; set; }
-        public int ToplamTecrube { get; private set; } = 0;
+        public int ToplamTecrube { get; set; } = 0;
         public int Seviye { get; set; }
         public int YetenekPuani { get; set; } = 0;
 
@@ -22,15 +23,20 @@ namespace Mini_Oyun
         public int KritikSans => 15;
 
         // --- DİNAMİK HESAPLANAN ÖZELLİKLER ---
-        // Bu kısımlar statlar arttığında otomatik güncellenir.
-        public int MaksimumCan { get; set; } = 200;
+        
+        public int MaksimumCan { get; set; } = 100;
         public int SaldiriGucu { get; set; } = 25;
         public int Savunma { get; set; } = 1;
 
         public List<Oge> Envanter { get; set; }
         public Oge DonanimliSilah { get; set; }
 
-        
+        public int Altın { get; set; } = 50;
+
+        public Oge MevcutZirh { get; set; }
+
+        public Karakter() { }
+
         public Karakter(string ad)
         {
             Ad = ad;
@@ -39,8 +45,9 @@ namespace Mini_Oyun
             HP_Stat = 1;
             STR_Stat = 1;
             DEX_Stat = 1;
+            Altın = 50;
 
-            // Başlangıç canı, statlardan hesaplanan MaksimumCan'a eşitlenir.
+
             Can = MaksimumCan;
             Envanter = new List<Oge>();
             DonanimliSilah = null;
@@ -129,6 +136,7 @@ namespace Mini_Oyun
 
             Oge secilenOge = Envanter[index];
 
+            // 1. İKSİR KULLANIMI
             if (secilenOge.Tur == OgeTuru.Tuketilebilir)
             {
                 Can += secilenOge.EtkiDegeri;
@@ -136,11 +144,12 @@ namespace Mini_Oyun
                 Console.WriteLine($"{secilenOge.Ad} kullandınız. Güncel Can: {Can}");
                 Envanter.RemoveAt(index);
             }
+            // 2. SİLAH KUŞANMA
             else if (secilenOge.Tur == OgeTuru.Silah)
             {
                 if (DonanimliSilah != null)
                 {
-                    Envanter.Add(DonanimliSilah);
+                    Envanter.Add(DonanimliSilah);                             
                     SaldiriGucu -= DonanimliSilah.EtkiDegeri;
                     Console.WriteLine($"{DonanimliSilah.Ad} çıkarıldı.");
                 }
@@ -148,6 +157,24 @@ namespace Mini_Oyun
                 SaldiriGucu += DonanimliSilah.EtkiDegeri;
                 Envanter.RemoveAt(index);
                 Console.WriteLine($"{DonanimliSilah.Ad} kuşandınız! Toplam Saldırı Gücü: {SaldiriGucu}");
+            }
+            //3. ZIRH KUŞANMA
+            else if (secilenOge.Tur == OgeTuru.Zirh)
+            {
+                if (MevcutZirh != null)
+                {
+                    Envanter.Add(MevcutZirh);
+                    Savunma -= MevcutZirh.EtkiDegeri; 
+                    Console.WriteLine($"{MevcutZirh.Ad} çıkarıldı.");
+                }
+
+                MevcutZirh = secilenOge;
+                Savunma += MevcutZirh.EtkiDegeri; 
+                Envanter.RemoveAt(index);
+
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine($"{MevcutZirh.Ad} kuşandınız! Toplam Savunma: {Savunma}");
+                Console.ResetColor();
             }
         }
         #endregion

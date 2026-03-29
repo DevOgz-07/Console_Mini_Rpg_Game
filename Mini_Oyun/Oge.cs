@@ -28,17 +28,45 @@ namespace Mini_Oyun
             Nadirlik = nadirlik;
             Tur = tur;
             EtkiDegeri = etkiDegeri;
-        } 
+        }
+
 
         public void BilgileriGoster()
         {
-            string etkiBilgisi = "";
+            Console.ForegroundColor = NadirlikRengiGetir(this.Nadirlik); 
+            Console.Write($"- {Ad} [{Nadirlik}]");
+            Console.ResetColor();
+
             if (EtkiDegeri > 0)
             {
-                if (Tur == OgeTuru.Silah) etkiBilgisi = $", +{EtkiDegeri} Saldırı";
-                if (Tur == OgeTuru.Tuketilebilir) etkiBilgisi = $", +{EtkiDegeri} Can";
+                string birim = Tur == OgeTuru.Silah ? "Saldırı" : (Tur == OgeTuru.Zirh ? "Savunma" : "Can");
+                Console.ForegroundColor = ConsoleColor.DarkGray;
+                Console.WriteLine($" (+{EtkiDegeri} {birim})");
             }
-            Console.WriteLine($"-{Ad} ({Nadirlik}){etkiBilgisi}");
+            else Console.WriteLine();
+            Console.ResetColor();
+        }
+
+
+        public static ConsoleColor NadirlikRengiGetir(Nadirlik seviye)
+        {
+            switch (seviye)
+            {
+                case Nadirlik.Common:
+                    return ConsoleColor.White;
+                case Nadirlik.Uncommon:
+                    return ConsoleColor.Green;
+                case Nadirlik.Rare:
+                    return ConsoleColor.Blue;
+                case Nadirlik.Epic:
+                    return ConsoleColor.Magenta;
+                case Nadirlik.Legendary:
+                    return ConsoleColor.Yellow;
+                case Nadirlik.Mythic:
+                    return ConsoleColor.Red;
+                default:
+                    return ConsoleColor.Gray;
+            }
         }
 
 
