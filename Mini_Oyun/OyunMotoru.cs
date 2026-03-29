@@ -93,46 +93,102 @@ namespace Mini_Oyun
             }
 
             public void OyunuBaslat()
-            {
-                Console.WriteLine($"\n--- {oyuncu.Ad} maceraya başlıyor! ---");
-                Console.WriteLine($"Başlangıç Can: {oyuncu.Can}, Saldırı Gücü: {oyuncu.SaldiriGucu}, Seviye: {oyuncu.Seviye}");
+        {
+           
+                Console.Clear();
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine($"\n  >>> {oyuncu.Ad.ToUpper()} İÇİN KADER ANI BAŞLIYOR... <<<");
+                Console.ResetColor();
+                Thread.Sleep(1000);
 
-                while (oyuncu.HayattaMi())
-                {
-                    Console.WriteLine("\nNe yapmak istersiniz?");
-                    Console.WriteLine("1. Canavarlarla savaş");
-                    Console.WriteLine("2. Envanteri kontrol et ve öğe kullan");
-                    Console.WriteLine("3. Karakter Ayrıntılarını Kontrol et");
-                    Console.WriteLine("4. Stat yükseltme menüsüne git");
-                    Console.WriteLine("0. Oyundan çık");
+               while (true) 
+               {
+                 Console.Clear();
 
-                    string secim = Console.ReadLine();
+                 // --- ÜST PANEL (DURUM ÇUBUĞU) ---
+                 Console.ForegroundColor = ConsoleColor.DarkCyan;
+                 Console.WriteLine("===============================================================");
+                 Console.ResetColor();
 
-                    switch (secim)
-                    {
-                        case "1":
-                            SavasBaslat();
-                            break;
-                        case "2":
-                            EnvanterMenusu();
-                            break;
-                        case "3": // Yeni Karakter Ayrıntıları Menüsü
-                            KarakterAyrıntıları();
-                            break;
-                        case "4": // Yeni Stat Yükseltme Menüsü
-                            StatYukseltmeMenusu();
-                            break;
-                        case "0":
-                            Console.WriteLine("Oyundan çıkılıyor...");
-                            return;
-                        default:
-                            Console.WriteLine("Geçersiz seçim. Lütfen tekrar deneyin.");
-                            break;
-                    }
-                }
+                 Console.Write($"  👤 {oyuncu.Ad.PadRight(12)} ");
 
-                Console.WriteLine("\n--- Oyun Bitti! ---");
-                Console.WriteLine("Karakteriniz öldü. Daha şanslı bir dahaki sefere!");
+                 // Can rengini duruma göre değiştirelim
+                 if (oyuncu.Can < (oyuncu.MaksimumCan * 0.3)) Console.ForegroundColor = ConsoleColor.Red;
+                 else Console.ForegroundColor = ConsoleColor.Green;
+                 Console.Write($"❤️ HP: {oyuncu.Can}/{oyuncu.MaksimumCan}   ");
+
+                 Console.ForegroundColor = ConsoleColor.Yellow;
+                 Console.Write($"💰 Altın: {oyuncu.Altın}   ");
+
+                 Console.ForegroundColor = ConsoleColor.Magenta;
+                 Console.WriteLine($"⭐ Lvl: {oyuncu.Seviye}");
+
+                 Console.ForegroundColor = ConsoleColor.DarkCyan;
+                 Console.WriteLine("===============================================================");
+                 Console.ResetColor();
+
+                 // --- ANA MENÜ SEÇENEKLERİ ---
+                 Console.WriteLine("\n[1] ⚔️  MACERAYA ATIL (Vahşi Doğa)");
+                 Console.WriteLine("[2] 🏰  GÜMÜŞIŞIK ŞEHRİ (Dinlen & Market)");
+                 Console.WriteLine("[3] 🎒  ENVANTERİ KONTROL ET");
+                 Console.WriteLine("[4] 📋  KARAKTER AYRINTILARI");
+                 Console.WriteLine("[5] 📈  STAT YÜKSELTME");
+                 Console.WriteLine("[0] 💾  KAYDET VE DÜNYADAN AYRIL");
+
+                 Console.ForegroundColor = ConsoleColor.DarkGray;
+                 Console.Write("\n  Şu anki kararın nedir?: ");
+                 Console.ResetColor();
+
+                 string secim = Console.ReadLine();
+
+                  switch (secim)
+                  {
+                    case "1":
+                        SavasBaslat(); 
+                        break;
+
+                    case "2":
+                        SehreGit(); 
+                        break;
+
+                    case "3":
+                        EnvanterMenusu();
+                        break;
+
+                    case "4":
+                        KarakterAyrıntıları();
+                        break;
+
+                    case "5":
+                        StatYukseltmeMenusu();
+                        break;
+
+                    case "0":
+                        Console.WriteLine("\n  İlerleme kontrol ediliyor...");
+                        
+                        if (!oyuncu.Ad.StartsWith("Misafir_"))
+                        {
+                            OyunuKaydet(oyuncu);
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.WriteLine("  [!] Ruhun ve eşyaların mühürlendi. Güvendesin.");
+                        }
+                        else
+                        {
+                            Console.ForegroundColor = ConsoleColor.Yellow;
+                            Console.WriteLine("  [!] Misafir olduğun için hatıraların rüzgara karışacak.");
+                        }
+                        Console.ResetColor();
+                        Thread.Sleep(1500);
+                        return; 
+
+                    default:
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine("  [?] Bilinmeyen bir komut girdin, kahraman...");
+                        Console.ResetColor();
+                        Thread.Sleep(800);
+                        break;
+                  }
+               }
             }
 
             private void SavasBaslat()
@@ -305,7 +361,12 @@ namespace Mini_Oyun
                             Console.WriteLine(" [BİLGİ]: Misafir modundasınız, ilerlemeniz bu oturum kapanınca silinecek.");
                         }
                         Console.ResetColor();
-                        break;
+                        Console.WriteLine("\n[!] Savaş raporunu inceledikten sonra devam etmek için bir tuşa basın...");
+                        Console.ReadKey(); 
+                                          
+
+                        break; 
+                        
                     }
                     
                 }
@@ -658,6 +719,106 @@ namespace Mini_Oyun
 
             
                return new Oge(esyaAdı, secilenNadirlik, secilenTur, etki);
+            }
+
+            public void SehreGit()
+            {
+               bool sehirdeyim = true;
+
+               while (sehirdeyim)
+               {
+                Console.Clear();
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine("===============================================");
+                Console.WriteLine("        🏰 GÜMÜŞIŞIK ŞEHRİ MERKEZİ        ");
+                Console.WriteLine("===============================================");
+                Console.ResetColor();
+
+                // Şehir içi durum çubuğu
+                Console.WriteLine($"  👤 {oyuncu.Ad} | ❤️ Can: {oyuncu.Can}/{oyuncu.MaksimumCan} | 💰 Altın: {oyuncu.Altın}");
+                Console.WriteLine("-----------------------------------------------");
+
+                Console.WriteLine("\n  [1] 🍻 Şehir Hanı (Dinlen ve İyileş)");
+                Console.WriteLine("  [2] ⚖️  Market (Eşya Al/Sat) - [Yakında]");
+                Console.WriteLine("  [3] 🔨 Demirci (Zırh Geliştir) - [Yakında]");
+                Console.WriteLine("  [0] ⬅️  Şehir Kapısından Çık (Ana Menü)");
+
+                Console.ForegroundColor = ConsoleColor.DarkGray;
+                Console.Write("\n  Nereye gitmek istersin?: ");
+                Console.ResetColor();
+
+                string secim = Console.ReadLine();
+
+                switch (secim)
+                {
+                    case "1":
+                        SehirHani(); // Han metoduna git
+                        break;
+                    case "2":
+                        Console.WriteLine("\n  Market şu an kapalı, tüccar yolda!");
+                        Thread.Sleep(1000);
+                        break;
+                    case "0":
+                        sehirdeyim = false; // Döngüden çıkar ve OyunuBaslat'a döner
+                        break;
+                    default:
+                        Console.WriteLine("\n  Muhafızlar size garip bakıyor, geçersiz seçim.");
+                        Thread.Sleep(1000);
+                        break;
+                }
+               }
+            }
+
+            public void SehirHani()
+            {
+                      Console.Clear();
+                      Console.ForegroundColor = ConsoleColor.Yellow;
+                      Console.WriteLine("--- 🍻 GÜMÜŞIŞIK HANI ---");
+                      Console.ResetColor();
+
+           
+                    if (oyuncu.Can >= oyuncu.MaksimumCan)
+                    {
+                        Console.WriteLine("\nHancı: 'Zaten turp gibisin evlat! Git de biraz canavar avla.'");
+                        Console.WriteLine("\nDevam etmek için bir tuşa bas...");
+                        Console.ReadKey();
+                        return;
+                    }
+
+                      Console.WriteLine($"\nHancı: 'Oldukça bitkin görünüyorsun. 25 Altına sıcak bir yemek ve temiz bir yatak ister misin?'");
+                      Console.WriteLine($"\n  [1] Evet, İyileş (-25 💰)");
+                      Console.WriteLine("  [0] Hayır, Teşekkürler");
+
+                      Console.Write("\nKararın: ");
+                    string hancıSecim = Console.ReadLine();
+
+                     if (hancıSecim == "1")
+                     {
+                       if (oyuncu.Altın >= 25)
+                       {
+                          oyuncu.Altın -= 25;
+                          oyuncu.Can = oyuncu.MaksimumCan;
+
+                          Console.ForegroundColor = ConsoleColor.Green;
+                          Console.WriteLine("\n✨ Mışıl mışıl uyudun... Yaraların kapandı ve tazelendin!");
+
+                         
+                           if (!oyuncu.Ad.StartsWith("Misafir_"))
+                           {
+                             OyunuKaydet(oyuncu);
+                             Console.WriteLine(" [!] İlerlemen ve yeni canın kaydedildi.");
+                           }
+                       }
+                       else
+                       {
+                         Console.ForegroundColor = ConsoleColor.Red;
+                         Console.WriteLine("\nHancı: 'Bedava yatak yok evlat! Önce altın bul gel.'");
+                       }
+                     }
+
+                       Console.ResetColor();
+                       Console.WriteLine("\nDevam etmek için bir tuşa bas...");
+                       Console.ReadKey();
             }
 
     }
