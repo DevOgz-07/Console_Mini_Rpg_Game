@@ -6,12 +6,12 @@ namespace Mini_Oyun
 {
     public enum CanavarTuru
     {
-        CommonMonster,       //20 adet
-        RareMonster,         //15 adet
-        EpicMonster,         //10 adet
-        LegendaryMonster,    //8 adet
-        MythicMonster,       //5 adet
-        Boss,                //İsteğe bağlı yükseltilebilir.
+        CommonMonster,       
+        RareMonster,         
+        EpicMonster,         
+        LegendaryMonster,    
+        MythicMonster,       
+        Boss,               
     }
         public class Canavar
         {
