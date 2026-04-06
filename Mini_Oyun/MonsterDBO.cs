@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 
 namespace Mini_Oyun
@@ -21,6 +22,12 @@ namespace Mini_Oyun
             Canavarlar = canavarlar;
             Bosslar = bosslar ?? new List<Boss>();
         }
+        public Canavar RastgeleCanavarGetir()
+        {
+            Random rnd = new Random();
+            
+            return Canavarlar[rnd.Next(Canavarlar.Count)];
+        }
 
     } // Bölge Ataması
 
@@ -30,7 +37,7 @@ namespace Mini_Oyun
 {
     // 1. BÖLGE (Lvl 1-5)
     new Bolge("Huzurlu Çayır", 1, 5, new List<Canavar> {
-        new Canavar("Zorven", 22, 5, 100, CanavarTuru.CommonMonster, "LT_Zorven"),
+        new Canavar("Zorven", 22, 5, 1000, CanavarTuru.CommonMonster, "LT_Zorven"),
         new Canavar("Zeltar", 23, 6, 11, CanavarTuru.CommonMonster, "LT_Zeltar"),
         new Canavar("Jexor", 23, 6, 12, CanavarTuru.CommonMonster, "LT_Jexor")
     }),

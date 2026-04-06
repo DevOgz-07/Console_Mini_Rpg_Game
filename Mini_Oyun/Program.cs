@@ -50,7 +50,7 @@ namespace Mini_Oyun
                 Console.ResetColor();
 
                 Console.WriteLine("\n[1] 📥 Kayıtlı Hesaba Giriş Yap");
-                Console.WriteLine("[2] 📝 Yeni Kahraman Oluştur");
+                Console.WriteLine("[2] 📝 Yeni Hesap Oluştur");
                 Console.WriteLine("[3] 👤 Misafir Modu (Kaydedilmez)");
                 Console.WriteLine("[0] ❌ Dünyadan Ayrıl");
 
@@ -61,7 +61,14 @@ namespace Mini_Oyun
 
                 string secim = Console.ReadLine();
 
-                if (secim == "0") return; 
+                if (secim == "0")
+                {
+                    Console.Clear();
+                    Console.ForegroundColor= ConsoleColor.Yellow;
+                    Console.WriteLine($"Dünyadan Ayrılıyor Bir Daha ki Sefere Görüşmek Üzere Maceracı");
+                    Console.ResetColor();
+                    return;
+                }
 
                 if (secim == "1") 
                 {
