@@ -25,7 +25,7 @@ namespace Mini_Oyun
         public Canavar RastgeleCanavarGetir()
         {
             Random rnd = new Random();
-            
+
             return Canavarlar[rnd.Next(Canavarlar.Count)];
         }
 

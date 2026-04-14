@@ -17,16 +17,20 @@ namespace Mini_Oyun
         public int YetenekPuani { get; set; } = 0;
 
         // --- İSTATİSTİKLER ---
-        public int HP_Stat { get; set; }
-        public int STR_Stat { get; set; }
-        public int DEX_Stat { get; set; }
+        public int HP_Stat { get; set; } = 1;
+        public int STR_Stat { get; set; } = 1;
+        public int DEX_Stat { get; set; } = 1;
         public int KritikSans => 15;
 
         // --- DİNAMİK HESAPLANAN ÖZELLİKLER ---
-        
+
         public int MaksimumCan { get; set; } = 100;
         public int SaldiriGucu { get; set; } = 25;
         public int Savunma { get; set; } = 1;
+
+        // --- TOPLAM DEĞERLER (Eşyalar Dahil - UI'da En Altta Gözükecek) ---
+        public int ToplamSaldiriGucu => (25 + (STR_Stat * 2)) + (DonanimliSilah?.EtkiDegeri ?? 0);
+        public int ToplamSavunma => (1 + (DEX_Stat * 1)) + (MevcutZirh?.EtkiDegeri ?? 0);
 
         public List<Oge> Envanter { get; set; }
         public Oge DonanimliSilah { get; set; }
@@ -47,9 +51,13 @@ namespace Mini_Oyun
             DEX_Stat = 1;
             Altın = 50;
 
+            Envanter = new List<Oge>();
+
+            Envanter.Add(new Oge("Demir Kılıc", Nadirlik.Common, OgeTuru.Silah, 5));
+            Envanter.Add(new Oge("Küçük Can İksiri", Nadirlik.Common, OgeTuru.Tuketilebilir, 25));
+
 
             Can = MaksimumCan;
-            Envanter = new List<Oge>();
             DonanimliSilah = null;
         }
 

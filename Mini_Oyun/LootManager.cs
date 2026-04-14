@@ -10,11 +10,11 @@ namespace Mini_Oyun
     {
         private static Random random = new Random();
 
-        
+
         private static Dictionary<string, List<Oge>> LootTables = new Dictionary<string, List<Oge>>
         {
             {
-                "GENEL_COMMON", //Tüm common canavarlar buradan düşürecek
+                "GENEL_COMMON", //Tüm Common Canavarlar Bu itemleri düşürecek
                 new List<Oge>
                 {
                     new Oge("Küçük Can İksiri", Nadirlik.Common, OgeTuru.Tuketilebilir, 25),
@@ -25,12 +25,15 @@ namespace Mini_Oyun
                     new Oge("Hilal Kılıcı", Nadirlik.Common, OgeTuru.Silah, 7),
                     new Oge("Zincir Zırh", Nadirlik.Common, OgeTuru.Zirh, 5),
                     new Oge("Azap Kılıcı", Nadirlik.Common, OgeTuru.Silah, 10),
+                    new Oge("Kara Zırh", Nadirlik.Common, OgeTuru.Zirh, 7),
+                    new Oge("Uzun Kılıç", Nadirlik.Common, OgeTuru.Silah, 8),
+                    new Oge("Kısa Kılıç", Nadirlik.Common, OgeTuru.Zirh, 6),
 
 
                 }
             },
             {
-                "GENEL_RARE", // Tüm nadir canavarlar buradan düşürecek
+                "GENEL_RARE", //Tüm Rare Canavarlar Bu itemleri düşürecek
                 new List<Oge>
                 {
                     new Oge("Keskin Çelik Kılıç", Nadirlik.Rare, OgeTuru.Silah, 12),
@@ -38,9 +41,19 @@ namespace Mini_Oyun
                     new Oge("Büyük Şifa İksiri", Nadirlik.Rare, OgeTuru.Tuketilebilir, 40),
                     new Oge("Güçlendirilmiş Kalkan", Nadirlik.Rare, OgeTuru.Zirh, 10)
                 }
-            }
-            
+            },
+            {
+                "GENEL_BOSS", // Tüm Boss Canavarlar Bu itemleri düşürecek
+                new List<Oge>
+                {
+                    new Oge("Ejderha Kılıcı", Nadirlik.Epic, OgeTuru.Silah, 20),
+                    new Oge("Ejderha Zırhı", Nadirlik.Epic, OgeTuru.Zirh, 15),
+                    new Oge("Büyük Can İksiri", Nadirlik.Rare, OgeTuru.Tuketilebilir, 50),
+                    new Oge("Büyük Şifa İksiri", Nadirlik.Rare, OgeTuru.Tuketilebilir, 40)
+                }
+            },
         };
+        
 
         
         public static List<Oge> LootDusur(Canavar canavar)
