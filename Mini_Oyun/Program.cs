@@ -33,7 +33,7 @@ namespace Mini_Oyun
             DosyaTaramaEfekti();
             Console.ResetColor();
 
-            
+
             while (true)
             {
                 Karakter oyuncu = null;
@@ -163,25 +163,27 @@ namespace Mini_Oyun
         {
             Console.Clear();
             Console.ForegroundColor = ConsoleColor.Green;
-            string[] girisMetni = {
-            "Gözlerini araladığında, yüzüne vuran keskin ve soğuk rüzgârı hissediyorsun...",
-            "Gümüşışık Şehri'nin kadim surları, ufukta görkemli birer gölge gibi yükseliyor.",
-            "Etrafında, henüz anlamlandıramadığın kadim bir çarkın döndüğünü seziyorsun...",
-            "Kaderine doğru uzanan bu puslu yolda, zihnini kurcalayan tek bir soru var:",
-            "\"Sen aslında kimsin?\""
-        };
 
-            foreach (string satir in girisMetni)
+            // --- AŞAMA 1: PROLOG (GÖKTEN DÜŞÜŞ) ---
+            string[] prolog = {
+              "Yıldızların arasından sessizce süzülen gemin, ansızın karanlık bir çekimle sarsıldı...",
+              "Karanlık Dünya'da atmosfer seni bir canavar gibi yutarken sistemler birer birer çöktü.",
+              "Dumanlar tüten enkazdan dışarı adım attığında, gökyüzünün olmadığını fark ettin.",
+              "Sadece zifiri bir karanlık ve bu karanlığın ortasında parlayan devasa, çarpık bir silüet..."
+    };
+
+            foreach (string satir in prolog)
             {
                 foreach (char c in satir) { Console.Write(c); Thread.Sleep(30); }
                 Console.WriteLine();
                 Thread.Sleep(1500);
             }
 
+            // --- AŞAMA 2: GEÇMİŞİN SEÇİMİ ---
             bool secimYapildi = false;
             while (!secimYapildi)
             {
-                Console.WriteLine();
+                Console.WriteLine("\nZihnindeki pus dağılırken, bu dünyaya düşmeden önce kim olduğunu hatırlıyorsun...");
                 Console.BackgroundColor = ConsoleColor.Cyan;
                 Console.ForegroundColor = ConsoleColor.Black;
                 Console.Write(" --- GEÇMİŞİNİN GÖLGESİNE KARAR VER --- ");
@@ -203,19 +205,15 @@ namespace Mini_Oyun
                 {
                     case "1":
                         oyuncu.HP_Stat += 15; oyuncu.STR_Stat += 2; oyuncu.DEX_Stat += 2; oyuncu.Altın += 100;
-                        oyuncu.MaksimumCan += 75; oyuncu.SaldiriGucu += 4; oyuncu.Savunma += 2;
                         secimYapildi = true; break;
                     case "2":
                         oyuncu.HP_Stat += 5; oyuncu.STR_Stat += 5; oyuncu.DEX_Stat += 3;
-                        oyuncu.MaksimumCan += 25; oyuncu.SaldiriGucu += 10; oyuncu.Savunma += 3;
                         secimYapildi = true; break;
                     case "3":
                         oyuncu.HP_Stat += 5; oyuncu.STR_Stat += 3; oyuncu.DEX_Stat += 7;
-                        oyuncu.MaksimumCan += 25; oyuncu.SaldiriGucu += 6; oyuncu.Savunma += 7;
                         secimYapildi = true; break;
                     case "4":
                         oyuncu.HP_Stat += 10; oyuncu.STR_Stat += 1; oyuncu.DEX_Stat += 10;
-                        oyuncu.MaksimumCan += 50; oyuncu.SaldiriGucu += 2; oyuncu.Savunma += 10;
                         secimYapildi = true; break;
                     default:
                         Console.WriteLine("\n[!] Geçersiz seçim!");
@@ -223,12 +221,55 @@ namespace Mini_Oyun
                         Console.Clear();
                         break;
                 }
+
+                if (secimYapildi)
+                {
+                    
+                    oyuncu.MaksimumCan = 100 + (oyuncu.HP_Stat * 5);
+                    oyuncu.SaldiriGucu = 25 + (oyuncu.STR_Stat * 2);
+                    oyuncu.Savunma = 1 + (oyuncu.DEX_Stat * 1);
+                    oyuncu.Can = oyuncu.MaksimumCan;
+                }
             }
-            oyuncu.Can = oyuncu.MaksimumCan;
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine($"\nKaderin mühürlendi, {oyuncu.Ad.ToUpper()}. Gümüşışık kapıları açılıyor...");
+
+            // --- AŞAMA 3: UMUTSUZ SAVAŞ (SÜTUN MUHAFIZI) ---
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("\n[!] BİR GÖLGE DEHŞETİ BELİRDİ: KARANLIK SÜTUNUN MUHAFIZI!");
             Console.ResetColor();
-            Thread.Sleep(2000);
+            Thread.Sleep(5000);
+            Console.WriteLine($"\n{oyuncu.Ad} kılıcını çekti ama elleri titriyor...");
+            Thread.Sleep(5000);
+            Console.WriteLine($"{oyuncu.Ad} saldırıyor! Hasar: {oyuncu.SaldiriGucu}");
+            Console.ForegroundColor = ConsoleColor.DarkRed;
+            Console.WriteLine("MUHAFIZ SÜTUN: 'Bu dünyaya ait olmayan ışık... Burada sadece sönmek için varsın!'");
+            Console.ResetColor();
+            Thread.Sleep(5000);
+            Console.ForegroundColor = ConsoleColor.DarkRed;
+            Console.WriteLine("\nMUHAFIZ KARANLIK BİR DARBE İNDİRİYOR!");
+            Console.WriteLine("ALINAN HASAR: 99999!");
+            Console.ResetColor();
+            Thread.Sleep(5000);
+
+            // --- AŞAMA 4: UYANIŞ ---
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.Green;
+            string[] uyanisMetni = {
+               "Gözlerini araladığında, yüzüne vuran keskin ve soğuk rüzgârı hissediyorsun...",
+               "Gümüşışık Şehri'nin kadim surları, ufukta görkemli birer gölge gibi yükseliyor.",
+               "Saldırmayı denedin ama kılıcın o varlığın gövdesinde bir tüy gibi sekti.",
+               "Gemin parçalandı, teknolojin yok oldu... Sadece özündeki yeteneklerin kaldı.",
+               "Etrafında, henüz anlamlandıramadığın kadim bir çarkın döndüğünü seziyorsun...",
+              $"Kaderin mühürlendi, {oyuncu.Ad}. Gümüşışık kapıları açılıyor..."
+    };
+
+            foreach (string satir in uyanisMetni)
+            {
+                foreach (char c in satir) { Console.Write(c); Thread.Sleep(30); }
+                Console.WriteLine();
+                Thread.Sleep(1500);
+            }
+            Console.ResetColor();
         }
     }
 }
