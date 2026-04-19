@@ -78,6 +78,7 @@
     <Compile Include="LootEntry.cs" />
     <Compile Include="LootManager.cs" />
     <Compile Include="MonsterDBO.cs" />
+    <Compile Include="NPC.cs" />
     <Compile Include="Oge.cs" />
     <Compile Include="OyunMotoru.cs" />
     <Compile Include="Program.cs" />

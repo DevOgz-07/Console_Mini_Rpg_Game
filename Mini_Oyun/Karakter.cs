@@ -28,7 +28,7 @@ namespace Mini_Oyun
         public int SaldiriGucu { get; set; } = 25;
         public int Savunma { get; set; } = 1;
 
-        // --- TOPLAM DEĞERLER (Eşyalar Dahil - UI'da En Altta Gözükecek) ---
+        // --- TOPLAM DEĞERLER ---
         public int ToplamSaldiriGucu => (25 + (STR_Stat * 2)) + (DonanimliSilah?.EtkiDegeri ?? 0);
         public int ToplamSavunma => (1 + (DEX_Stat * 1)) + (MevcutZirh?.EtkiDegeri ?? 0);
 
