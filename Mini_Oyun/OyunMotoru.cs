@@ -203,7 +203,7 @@ namespace Mini_Oyun
             {
                 List<Canavar> slotlar = new List<Canavar>();
 
-                // 1. DÜŞMANLARI OLUŞTURMA
+                // 1. DÜŞMANLARI OLUŞTURMA (Mantık Korundu)
                 for (int i = 0; i < 3; i++)
                 {
                     Canavar taslak = secilenBolge.RastgeleCanavarGetir();
@@ -213,68 +213,90 @@ namespace Mini_Oyun
                         taslak.SaldiriGucu,
                         taslak.VerilenTecrube,
                         taslak.Turu,
-                        taslak.LootTableId // Parametre hatası giderildi
+                        taslak.LootTableId
                     );
                     yeniCanavar.Savunma = taslak.Savunma;
                     slotlar.Add(yeniCanavar);
                 }
 
                 Console.Clear();
-                Console.WriteLine($"\n--- {secilenBolge.Ad} Keşfediliyor... ---");
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine($"\n>>> {secilenBolge.Ad.ToUpper()} KEŞFEDİLİYOR...");
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"[!] DİKKAT: 3 adet {slotlar[0].Ad} pusuda bekliyor!");
+                Console.WriteLine($"[!] PUSU: 3 adet {slotlar[0].Ad} ortaya çıktı!");
                 Console.ResetColor();
                 Thread.Sleep(1500);
 
-                // 2. MEVCUT SAVAŞ DÖNGÜSÜ
+                // 2. MEVCUT SAVAŞ DÖNGÜSÜ (Görselleştirilmiş)
                 while (oyuncu.HayattaMi() && slotlar.Any(s => s.HayattaMi()))
                 {
                     Console.Clear();
-                    Console.WriteLine("\n--- SAVAŞ SAHASI ---");
+
+                    // --- DÜŞMAN PANELİ ---
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("┌────────────────────── DÜŞMANLAR ─────────────────────────┐");
                     for (int i = 0; i < slotlar.Count; i++)
                     {
-                        if (slotlar[i].HayattaMi())
-                        {
-                            Console.Write($"[Slot {i + 1}] {slotlar[i].Ad}: ");
-                            Console.ForegroundColor = ConsoleColor.Magenta;
-                            Console.WriteLine($"{slotlar[i].Can}/{slotlar[i].MaksimumCan} HP");
-                            Console.ResetColor();
-                        }
-                        else
-                        {
-                            Console.ForegroundColor = ConsoleColor.DarkGray;
-                            Console.WriteLine($"[Slot {i + 1}] {slotlar[i].Ad}: --- ÖLÜ ---");
-                            Console.ResetColor();
-                        }
+                        var c = slotlar[i];
+                        string durum = c.HayattaMi() ? CanBariCiz(c.Can, c.MaksimumCan) : "---------- ÖLÜ ----------";
+                        string satir = $"│ [Slot {i + 1}] {c.Ad,-12} {durum}";
+                        Console.WriteLine(satir.PadRight(59) + "│");
                     }
+                    Console.WriteLine("└──────────────────────────────────────────────────────────┘");
 
-                    Console.WriteLine("------------------------------");
+                    // --- OYUNCU PANELİ ---
                     Console.ForegroundColor = ConsoleColor.Cyan;
-                    Console.WriteLine($"{oyuncu.Ad} Can: {oyuncu.Can}/{oyuncu.MaksimumCan}");
-                    Console.ResetColor();
-                    Console.WriteLine("1. Geniş Saldırı (Tümüne Vur)");
-                    Console.WriteLine("2. İksir Kullan");
-                    Console.WriteLine("3. Kaç");
+                    Console.WriteLine("\n┌────────────────────── KAHRAMAN ──────────────────────────┐");
 
+                    
+                    Console.Write("│ ");
+
+                   
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    string adVeSeviye = $"{oyuncu.Ad} (Lvl: {oyuncu.Seviye})";
+                    string oyuncuCanBar = CanBariCiz(oyuncu.Can, oyuncu.MaksimumCan);
+                    string ustIcerik = $"{adVeSeviye,-18} {oyuncuCanBar}";
+                    Console.Write(ustIcerik.PadRight(56)); 
+
+                    
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.WriteLine(" │");
+
+                    
+                    Console.Write("│ ");
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    
+                    string statlar = $"GÜÇ: {oyuncu.SaldiriGucu,-4} │ SAVUNMA: {oyuncu.Savunma,-4} │ ALTIN: {oyuncu.Altın,-6} 💰";
+                    Console.Write(statlar.PadRight(56)); 
+
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.WriteLine(" │");
+                    Console.WriteLine("└──────────────────────────────────────────────────────────┘");
+                    Console.ResetColor();
+
+                    // --- AKSİYON MENÜSÜ ---
+                    Console.WriteLine("\n [1] ⚔️ Geniş Saldırı  [2] 🧪 İksir  [3] 🏃 Kaç");
+                    Console.Write("\nKararın: ");
                     string secim = Console.ReadLine();
 
                     if (secim == "1")
                     {
-                        Console.WriteLine("\n--- Düşmanlar Saldırıya Geçiyor! ---");
+                        // 1. DÜŞMANLARIN SALDIRISI (Log Sistemi)
+                        Console.WriteLine("\n--- 🛡️ SAVUNMA SIRASI ---");
                         foreach (var canavar in slotlar.Where(s => s.HayattaMi()))
                         {
                             int cHasar = Math.Max(1, rnd.Next(canavar.SaldiriGucu - 2, canavar.SaldiriGucu + 3) - oyuncu.Savunma);
                             oyuncu.Can -= cHasar;
                             Console.ForegroundColor = ConsoleColor.Red;
                             Console.WriteLine($"> {canavar.Ad} vurdu: -{cHasar} HP!");
-                            Console.ResetColor();
-                            Thread.Sleep(800);
+                            Thread.Sleep(600);
                         }
+                        Console.ResetColor();
 
                         if (!oyuncu.HayattaMi()) break;
 
-                        Console.WriteLine("\nSıra sende! Hamle yapıyorsun...");
-                        Thread.Sleep(1000);
+                        // 2. OYUNCUNUN SALDIRISI
+                        Console.WriteLine("\n--- ⚔️ SALDIRI SIRASI ---");
                         int temelHasar = oyuncu.SaldiriGucu;
                         int sapma = (int)(temelHasar * 0.15);
                         int hamHasar = rnd.Next(temelHasar - sapma, temelHasar + sapma + 1);
@@ -292,122 +314,76 @@ namespace Mini_Oyun
                     else if (secim == "3") return;
                 }
 
-                // 3. ZAFER VE GANİMET
+                // 3. ZAFER VE GANİMET (Gelişmiş Görünüm)
                 if (slotlar.All(s => !s.HayattaMi()))
                 {
                     Console.Clear();
                     Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine("===========================================");
-                    Console.WriteLine("      ZAFER! TÜM SLOTLARI TEMİZLEDİN       ");
-                    Console.WriteLine("===========================================");
+                    Console.WriteLine("╔═════════════════════════════════════════════════════════╗");
+                    Console.WriteLine("║                       🏆 ZAFER 🏆                       ║");
+                    Console.WriteLine("╚═════════════════════════════════════════════════════════╝");
                     Console.ResetColor();
 
                     int toplamExp = slotlar.Sum(s => s.VerilenTecrube);
                     int toplamAltin = rnd.Next(45, 101);
 
-                    
                     oyuncu.TecrubeKazan(toplamExp);
                     oyuncu.Altın += toplamAltin;
 
-                    
+                    // EXP Bar Hesaplamaları (Mantığın Korundu)
                     int baslangicEXP = oyuncu.MevcutSeviyeBaslangicEXP();
-                    int gerekenEXP = oyuncu.SonrakiSeviyeIcinGerekenToplamEXP(); 
+                    int gerekenEXP = oyuncu.SonrakiSeviyeIcinGerekenToplamEXP();
                     int mevcutIlerleme = oyuncu.Tecrube - baslangicEXP;
                     int seviyeIcinGereken = gerekenEXP - baslangicEXP;
 
                     double yuzde = seviyeIcinGereken > 0 ? (double)mevcutIlerleme / seviyeIcinGereken * 100 : 0;
                     yuzde = Math.Min(100, Math.Max(0, yuzde));
 
-                    int barGenislik = 20;
-                    int doluKisim = (int)(yuzde / (100.0 / barGenislik));
-                    string barVisual = new string('█', doluKisim) + new string('░', barGenislik - doluKisim);
+                    Console.WriteLine($"\n⭐ Kazanılan EXP: +{toplamExp}");
+                    Console.WriteLine($"💰 Kazanılan Altın: +{toplamAltin}");
+                    Console.WriteLine($"📊 Seviye İlerlemesi: [%{(int)yuzde}]");
+                    Console.WriteLine(CanBariCiz((int)yuzde, 100)); // EXP Barı için aynı fonksiyonu kullandık
 
-                    Console.WriteLine($"\nKazanılan Toplam EXP: +{toplamExp}");
-                    Console.WriteLine($"Kazanılan Toplam ALTIN: 💰+{toplamAltin}");
-                    Console.WriteLine($"Seviye İlerlemesi: [{barVisual} %{(int)yuzde}]");
-
-                    if (oyuncu.Ad.StartsWith("Misafir_"))
-                    {
-                        Console.ForegroundColor = ConsoleColor.Cyan;
-                        Console.WriteLine("\n[!] Misafir Modunda ilerleme kaydedilmez.");
-                        Console.ResetColor();
-                    }
-
+                    // GRUP GANİMETİ MANTIĞI (Aynen Korundu)
                     temizlenenGrupSayisi++;
-
                     if (temizlenenGrupSayisi % 3 == 0)
                     {
-                        Console.WriteLine("\n--- GRUP GANİMETLERİ ---");
+                        Console.ForegroundColor = ConsoleColor.Magenta;
+                        Console.WriteLine("\n--- 📦 NADİR GRUP GANİMETLERİ ---");
+                        Console.ResetColor();
 
                         List<Oge> tumPotansiyelLoot = new List<Oge>();
                         foreach (var canavar in slotlar)
-                        {
                             tumPotansiyelLoot.AddRange(LootManager.LootDusur(canavar));
-                        }
 
-                        Random rndGanimet = new Random();
-                        
-                        int alinacakMiktar = (rndGanimet.Next(1, 101) <= 2) ? 2 : 1;
+                        int alinacakMiktar = (rnd.Next(1, 101) <= 2) ? 2 : 1;
+                        var secilenGanimetler = tumPotansiyelLoot.OrderByDescending(o => o.Nadirlik).Take(alinacakMiktar).ToList();
 
-                        var secilenGanimetler = tumPotansiyelLoot
-                            .OrderByDescending(o => o.Nadirlik) 
-                            .Take(alinacakMiktar)
-                            .ToList();
-
-                        if (secilenGanimetler.Count > 0)
+                        foreach (var oge in secilenGanimetler)
                         {
-                            foreach (var oge in secilenGanimetler)
+                            if (oyuncu.Envanter.Count < 20)
                             {
-                                if (oyuncu.Envanter.Count < 20)
-                                {
-                                    oyuncu.Envanter.Add(oge);
-
-                                    
-                                    Console.ForegroundColor = Oge.NadirlikRengiGetir(oge.Nadirlik);
-
-                                    
-                                    string ogeBilgisi = "";
-                                    switch (oge.Tur)
-                                    {
-                                        case OgeTuru.Silah: ogeBilgisi = $"(Hasar: +{oge.EtkiDegeri})"; break;
-                                        case OgeTuru.Zirh: ogeBilgisi = $"(Savunma: +{oge.EtkiDegeri})"; break;
-                                        case OgeTuru.Tuketilebilir: ogeBilgisi = $"(Yenileme: +{oge.EtkiDegeri} HP)"; break;
-                                    }
-
-                                    
-                                    Console.WriteLine($" > [{oge.Nadirlik}] {oge.Ad} {ogeBilgisi} bulundu!");
-
-                                    
-                                    Console.ResetColor();
-                                }
-                                else
-                                {
-                                    Console.ForegroundColor = ConsoleColor.DarkRed;
-                                    Console.WriteLine($" > [!] Çantan dolu! {oge.Ad} yere düştü.");
-                                    Console.ResetColor();
-                                }
+                                oyuncu.Envanter.Add(oge);
+                                Console.ForegroundColor = Oge.NadirlikRengiGetir(oge.Nadirlik);
+                                Console.WriteLine($" > {oge.Ad} bulundu! Envantere eklendi.");
                             }
+                            else
+                            {
+                                Console.ForegroundColor = ConsoleColor.DarkRed;
+                                Console.WriteLine($" > [!] Çanta dolu! {oge.Ad} kayboldu.");
+                            }
+                            Console.ResetColor();
                         }
-                    }
-                    else
-                    {
-                        // Oyuncuyu motive etmek için kalan grup sayısını gösterelim.
-                        int kalan = 3 - (temizlenenGrupSayisi % 3);
-                        Console.WriteLine($"\n[Ganimet Radarı]: Yakındaki değerli eşyaları sezmek için {kalan} grup daha temizlemelisin.");
                     }
 
                     if (!oyuncu.Ad.StartsWith("Misafir_")) OyunuKaydet(oyuncu);
 
-                    // SAVAŞ SONRASI MENÜSÜ
+                    // SAVAŞ SONRASI SEÇENEKLERİ
                     bool kararVerildi = false;
                     while (!kararVerildi)
                     {
-                        Console.WriteLine("\n--- ŞİMDİ NE YAPMAK İSTERSİN? ---");
-                        Console.WriteLine("[1] Keşfe Devam Et");
-                        Console.WriteLine("[2] Şehre Dön (Dinlen & Market)");
-                        Console.WriteLine("[3] Envanteri Kontrol Et");
-                        Console.WriteLine("[0] Ana Menü");
-
+                        Console.WriteLine("\n[1] Keşfe Devam  [2] Şehre Dön  [3] Envanter  [0] Çıkış");
+                        Console.Write("Seçiminiz: ");
                         string sSecim = Console.ReadLine();
                         if (sSecim == "1") kararVerildi = true;
                         else if (sSecim == "2") { SehreGit(oyuncu); return; }
@@ -417,10 +393,41 @@ namespace Mini_Oyun
                 }
                 else if (!oyuncu.HayattaMi())
                 {
-                    Console.WriteLine("\nSayıca üstün geldiler... Yenildin.");
+                    Console.Clear();
+                    
+                    oyuncu.Can = 0;
+
+                    Console.ForegroundColor = ConsoleColor.DarkRed;
+                    Console.WriteLine("╔═════════════════════════════════════════════════════════╗");
+                    Console.WriteLine("║                    💀 MAĞLUBİYET 💀                     ║");
+                    Console.WriteLine("╚═════════════════════════════════════════════════════════╝");
+
+                    Console.WriteLine($"\n [!] {oyuncu.Ad.ToUpper()} karanlığa yenik düştü...");
+                    Console.WriteLine(" [!] Bilincin kapanırken Gümüşışık surlarını sayıklıyorsun.");
+                    Console.ResetColor();
+
+                    Console.WriteLine("\n-----------------------------------------------------------");
+                    Console.WriteLine(" Gözlerini açtığında kendini Gümüşışık'ta bulacaksın...");
+                    Console.WriteLine("-----------------------------------------------------------");
+
+                    Console.WriteLine("\n[Devam etmek için bir tuşa bas...]");
+                    Console.ReadKey();
+
+                    
                     bolgeKesifDevam = false;
+                    SehreGit(oyuncu);
                 }
             }
+        }
+
+        
+        public string CanBariCiz(int suAn, int maks)
+        {
+            int barGenislik = 20;
+            int doluKisim = (int)((double)suAn / maks * barGenislik);
+            if (doluKisim < 0) doluKisim = 0;
+
+            return "[" + new string('█', doluKisim) + new string('░', barGenislik - doluKisim) + $"] {suAn}/{maks}";
         }
 
 
