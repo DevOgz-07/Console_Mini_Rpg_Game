@@ -436,25 +436,82 @@ namespace Mini_Oyun
         {
             while (true)
             {
-                oyuncu.EnvanteriGoster();
-                Console.WriteLine("Hangi öğeyi kullanmak istersiniz? (Sıra numarasını girin, 0 ile geri dönün)");
-                Console.Write("Seçiminiz: ");
+                Console.Clear();
+                // Ekrandaki sıra numarası ile gerçek eşya nesnesini bağlayan sözlük
+                Dictionary<int, Oge> secimMap = new Dictionary<int, Oge>();
+                int gosterimSirasi = 1;
+                int panelGenislik = 58;
+
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine("┌" + new string('─', panelGenislik - 10) + " ENVANTER " + new string('─', 2) + "┐");
+
+                // --- SİLAHLAR ---
+                YazdirKategori("⚔️  SİLAHLAR", "Silah", ConsoleColor.Yellow, ref gosterimSirasi, secimMap);
+                Console.WriteLine("├" + new string('─', panelGenislik) + "┤");
+
+                // --- ZIRHLAR ---
+                YazdirKategori("🛡️  ZIRHLAR", "Zirh", ConsoleColor.Green, ref gosterimSirasi, secimMap);
+                Console.WriteLine("├" + new string('─', panelGenislik) + "┤");
+
+                // --- İKSİRLER ---
+                YazdirKategori("🧪 İKSİRLER", "Tuketilebilir", ConsoleColor.Red, ref gosterimSirasi, secimMap);
+                Console.WriteLine("└" + new string('─', panelGenislik) + "┘");
+
+                Console.ForegroundColor = ConsoleColor.DarkGray;
+                Console.WriteLine("\n [0] Geri Dön");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write("\nKullanmak istediğin numara: ");
+
                 if (int.TryParse(Console.ReadLine(), out int secim))
                 {
-                    if (secim == 0)
+                    if (secim == 0) break;
+
+                    // Sözlükten ekrandaki numaraya karşılık gelen GERÇEK eşyayı bul
+                    if (secimMap.ContainsKey(secim))
                     {
-                        break;
+                        Oge secilenOge = secimMap[secim];
+                        // Artık index ile değil, doğrudan eşya nesnesi ile işlem yapıyoruz
+                        karakter.OgeKullanNesneIle(secilenOge);
                     }
                     else
                     {
-                        oyuncu.OgeKullan(secim - 1);
+                        Console.WriteLine("Hatalı seçim!");
+                        Thread.Sleep(800);
                     }
                 }
-                else
+            }
+        }
+
+
+        private void YazdirKategori(string baslik, string turFiltresi, ConsoleColor renk, ref int sira, Dictionary<int, Oge> map)
+        {
+            Console.Write("│ ");
+            Console.ForegroundColor = renk;
+            
+            Console.Write(baslik.PadRight(56));
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine(" │");
+
+            foreach (var oge in oyuncu.Envanter)
+            {
+                
+                if (oge.Tur.ToString().Contains(turFiltresi) || oge.Ad.Contains(turFiltresi))
                 {
-                    Console.WriteLine("Geçersiz giriş.");
+                    Console.Write("│  "); 
+                    Console.ForegroundColor = ConsoleColor.White;
+
+                    
+                    string satir = $"[{sira}] {oge.Ad} (+{oge.EtkiDegeri})";
+
+                    
+                    Console.Write(satir.PadRight(55));
+
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.WriteLine(" │");
+
+                    map.Add(sira, oge);
+                    sira++;
                 }
-                Thread.Sleep(1000);
             }
         }
 
@@ -465,15 +522,58 @@ namespace Mini_Oyun
             while (menudeyim)
             {
                 Console.Clear();
-                Console.WriteLine($"\n--- STAT YÜKSELTME SİSTEMİ ---");
-                Console.WriteLine($"Kullanılabilir Puan: {oyuncu.YetenekPuani}");
-                Console.WriteLine("------------------------------");
-                Console.WriteLine($"1. HP  (Stat: {oyuncu.HP_Stat})  -> (+5 Max Can)");
-                Console.WriteLine($"2. STR (Stat: {oyuncu.STR_Stat}) -> (+2 Saldırı)");
-                Console.WriteLine($"3. DEX (Stat: {oyuncu.DEX_Stat}) -> (+1 Savunma)");
-                Console.WriteLine("\n[Çıkmak için 0'a basın]");
+                // --- BAŞLIK PANELİ ---
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine("┌──────────────────────────────────────────────────────────┐");
+                Console.WriteLine("│               📊 STAT YÜKSELTME MENÜSÜ 📊                │");
+                Console.WriteLine("└──────────────────────────────────────────────────────────┘");
 
-                Console.Write("\nSeçiminiz: ");
+                // --- BİLGİ SATIRI ---
+                Console.Write("│ ");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                string puanBilgi = $"Kullanılabilir Puan: {oyuncu.YetenekPuani}";
+                Console.Write(puanBilgi.PadRight(56));
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine(" │");
+                Console.WriteLine("├──────────────────────────────────────────────────────────┤");
+
+                // --- STAT LİSTESİ ---
+                // HP Satırı
+                Console.Write("│ ");
+                Console.ForegroundColor = ConsoleColor.White;
+                string hpSatir = $"[1] ❤️ HP  (Seviye: {oyuncu.HP_Stat}) -> (+5 Max Can)";
+                Console.Write(hpSatir.PadRight(56)); 
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine(" │");
+
+                // STR Satırı
+                Console.Write("│ ");
+                Console.ForegroundColor = ConsoleColor.White;
+                string strSatir = $"[2] ⚔️ STR (Seviye: {oyuncu.STR_Stat}) -> (+2 Saldırı)";
+                Console.Write(strSatir.PadRight(56));
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine(" │");
+
+                // DEX Satırı
+                Console.Write("│ ");
+                Console.ForegroundColor = ConsoleColor.White;
+                string dexSatir = $"[3] 🛡️ DEX (Seviye: {oyuncu.DEX_Stat}) -> (+1 Savunma)";
+                Console.Write(dexSatir.PadRight(57));
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine(" │");
+
+                Console.WriteLine("├──────────────────────────────────────────────────────────┤");
+                Console.Write("│ ");
+                Console.ForegroundColor = ConsoleColor.DarkGray;
+                Console.Write("[0] Geri Dön".PadRight(56));
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine(" │");
+                Console.WriteLine("└──────────────────────────────────────────────────────────┘");
+
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write("\nGeliştirmek istediğin stat (0-3): ");
+                Console.ResetColor();
+
                 string secim = Console.ReadLine();
 
                 if (secim == "0")
@@ -482,50 +582,45 @@ namespace Mini_Oyun
                 }
                 else if (secim == "1" || secim == "2" || secim == "3")
                 {
-
-                    if (oyuncu.YetenekPuani > 0) // Önce puan kontrolü
+                    if (oyuncu.YetenekPuani > 0)
                     {
+                        Console.ForegroundColor = ConsoleColor.Green;
                         if (secim == "1")
                         {
                             oyuncu.HP_Stat += 1;
-                            oyuncu.MaksimumCan = 100 + (oyuncu.HP_Stat * 5); // Formül korundu
+                            oyuncu.MaksimumCan = 100 + (oyuncu.HP_Stat * 5);
                             oyuncu.Can = oyuncu.MaksimumCan;
                             oyuncu.YetenekPuani -= 1;
-                            Console.WriteLine("\n[+] HP başarıyla yükseltildi!");
+                            Console.WriteLine("\n[+] Vücudun daha dayanıklı hale geliyor! (HP Yükseltildi)");
                         }
                         else if (secim == "2")
                         {
                             oyuncu.STR_Stat += 1;
-                            oyuncu.SaldiriGucu = 25 + (oyuncu.STR_Stat * 2); // Saf hasar güncellendi
+                            oyuncu.SaldiriGucu = 25 + (oyuncu.STR_Stat * 2);
                             oyuncu.YetenekPuani -= 1;
-                            Console.WriteLine("\n[+] STR başarıyla yükseltildi!");
+                            Console.WriteLine("\n[+] Kasların güçleniyor, vuruşların derinleşiyor! (STR Yükseltildi)");
                         }
                         else if (secim == "3")
                         {
                             oyuncu.DEX_Stat += 1;
-                            oyuncu.Savunma = 1 + (oyuncu.DEX_Stat * 1); // Saf savunma güncellendi
+                            oyuncu.Savunma = 1 + (oyuncu.DEX_Stat * 1);
                             oyuncu.YetenekPuani -= 1;
-                            Console.WriteLine("\n[+] DEX başarıyla yükseltildi!");
+                            Console.WriteLine("\n[+] Reflekslerin keskinleşiyor! (DEX Yükseltildi)");
                         }
-                        else 
-                        {
-                            Console.WriteLine("\n[!] Yanlış işlem yaptınız! Lütfen 1, 2 veya 3 seçin.");
-                            Thread.Sleep(1000);
-                            return; 
-                        }
-
-                        Console.WriteLine("\nDevam etmek için bir tuşa basın...");
-                        Console.ReadKey();
+                        Console.ResetColor();
+                        Thread.Sleep(1200);
                     }
-                    else 
+                    else
                     {
-                        Console.WriteLine("\n[!] Yetersiz yetenek puanı! Stat yükseltemezsiniz.");
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine("\n[!] Yetersiz yetenek puanı! Maceralara devam ederek TP kazanmalısın.");
+                        Console.ResetColor();
                         Thread.Sleep(1500);
                     }
                 }
             }
         }
-        
+
 
         private void KarakterAyrıntıları()
         {
