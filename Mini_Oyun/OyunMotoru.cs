@@ -342,20 +342,24 @@ namespace Mini_Oyun
                     Console.WriteLine($"\n⭐ Kazanılan EXP: +{toplamExp}");
                     Console.WriteLine($"💰 Kazanılan Altın: +{toplamAltin}");
                     Console.WriteLine($"📊 Seviye İlerlemesi: [%{(int)yuzde}]");
-                    Console.WriteLine(CanBariCiz((int)yuzde, 100)); // EXP Barı için aynı fonksiyonu kullandık
+                    Console.WriteLine(CanBariCiz((int)yuzde, 100));
+
 
                     // GRUP GANİMETİ MANTIĞI (Aynen Korundu)
                     temizlenenGrupSayisi++;
                     if (temizlenenGrupSayisi % 3 == 0)
                     {
+                        // --- GANİMET DÜŞME MANTIĞI ---
                         Console.ForegroundColor = ConsoleColor.Magenta;
-                        Console.WriteLine("\n--- 📦 NADİR GRUP GANİMETLERİ ---");
+                        Console.WriteLine("\n✨ TEBRİKLER: 3. Grup Temizlendi! Nadir Ganimetler Toplanıyor...");
+                        Console.WriteLine("--- 📦 NADİR GRUP GANİMETLERİ ---");
                         Console.ResetColor();
 
                         List<Oge> tumPotansiyelLoot = new List<Oge>();
                         foreach (var canavar in slotlar)
                             tumPotansiyelLoot.AddRange(LootManager.LootDusur(canavar));
 
+                        
                         int alinacakMiktar = (rnd.Next(1, 101) <= 2) ? 2 : 1;
                         var secilenGanimetler = tumPotansiyelLoot.OrderByDescending(o => o.Nadirlik).Take(alinacakMiktar).ToList();
 
@@ -374,6 +378,23 @@ namespace Mini_Oyun
                             }
                             Console.ResetColor();
                         }
+                    }
+                    else
+                    {
+                        
+                        int kalan = 3 - (temizlenenGrupSayisi % 3);
+
+                        Console.ForegroundColor = ConsoleColor.DarkGray;
+                        if (kalan == 1)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Cyan;
+                            Console.WriteLine("\n🔥 DİKKAT: Bir sonraki grup temizlendiğinde NADİR GANİMET düşecek!");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"\nℹ️ Nadir grup ganimeti için temizlenmesi gereken grup: {kalan}");
+                        }
+                        Console.ResetColor();
                     }
 
                     if (!oyuncu.Ad.StartsWith("Misafir_")) OyunuKaydet(oyuncu);
@@ -631,71 +652,72 @@ namespace Mini_Oyun
         private void KarakterAyrıntıları()
         {
             Console.Clear();
-            int panelGenislik = 58; // İç alan genişliği (Kenar çizgileri hariç)
+            int panelGenislik = 58; // İç genişlik
+            int gerekenToplamTecrube = oyuncu.SonrakiSeviyeIcinGerekenToplamEXP();
+            int kalanTecrube = gerekenToplamTecrube - oyuncu.Tecrube;
 
-            // ÜST BAŞLIK
+            // --- ÜST BAŞLIK ---
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine("┌" + new string('─', 20) + " KARAKTER PROFİLİ " + new string('─', 20) + "┐");
 
             YazdirProfilSatiri("AD", oyuncu.Ad.ToUpper(), ConsoleColor.Yellow);
             Console.WriteLine("├" + new string('─', panelGenislik) + "┤");
 
-            // TEMEL BİLGİLER
+            // --- TEMEL BİLGİLER ---
             YazdirProfilSatiri("SEVİYE", oyuncu.Seviye.ToString(), ConsoleColor.White);
             YazdirProfilSatiri("CAN", $"{oyuncu.Can} / {oyuncu.MaksimumCan}", ConsoleColor.Red);
             YazdirProfilSatiri("ALTIN", oyuncu.Altın.ToString(), ConsoleColor.Yellow);
             YazdirProfilSatiri("KRİTİK", "%" + oyuncu.KritikSans, ConsoleColor.Magenta);
 
-            // İLERLEME ÇUBUĞU (Özel Hizalama)
+            // --- İLERLEME ÇUBUĞU ---
+            string expBar = oyuncu.GetEXPBar();
+            
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.Write("│ ");
             Console.ForegroundColor = ConsoleColor.Gray;
-            string baslik = "İLERLEME";
-            Console.Write($"[{baslik.PadRight(12)}] : "); 
-
-            
-            string expBar = oyuncu.GetEXPBar(); 
+            Console.Write($"[{"İLERLEME".PadRight(12)}] : ");
             Console.ForegroundColor = ConsoleColor.White;
             Console.Write(expBar);
-
             
-            int barUzunlugu = expBar.Length;
-            int kalanBosluk = 58 - 19 - barUzunlugu;
-
-            if (kalanBosluk > 0)
-            {
-                Console.Write(new string(' ', kalanBosluk));
-            }
-
-            
+            int barKalanBosluk = 39 - expBar.Length;
+            if (barKalanBosluk > 0) Console.Write(new string(' ', barKalanBosluk));
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine(" │");
 
-            // İSTATİSTİKLER BÖLÜMÜ
-            Console.WriteLine("\n├" + new string('─', 21) + " İSTATİSTİKLER " + new string('─', 22) + "┤");
+            // --- TP DETAYLARI ---
+            YazdirProfilSatiri("SEVİYE TP", $"{oyuncu.Tecrube} / {gerekenToplamTecrube}", ConsoleColor.Yellow);
+            YazdirProfilSatiri("KALAN TP", $"{kalanTecrube} TP lazım", ConsoleColor.Magenta);
+            YazdirProfilSatiri("TOPLAM TP", oyuncu.ToplamTecrube.ToString(), ConsoleColor.Green);
+            
+
+            // --- İSTATİSTİKLER BÖLÜMÜ ---
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine("├" + new string('─', 21) + " İSTATİSTİKLER " + new string('─', 22) + "┤");
+
             YazdirProfilSatiri("HP (Can)", $"{oyuncu.HP_Stat} (+{oyuncu.MaksimumCan - 100} Max Can)", ConsoleColor.Green);
             YazdirProfilSatiri("STR (Güç)", $"{oyuncu.STR_Stat} (Hasar: {25 + (oyuncu.STR_Stat * 2)})", ConsoleColor.Red);
             YazdirProfilSatiri("DEX (Sav)", $"{oyuncu.DEX_Stat} (Zırh: {1 + (oyuncu.DEX_Stat * 1)})", ConsoleColor.Blue);
+            YazdirProfilSatiri("YETENEK P.", $"{oyuncu.YetenekPuani} (Harcanabilir)", ConsoleColor.Yellow);
 
-            // EKİPMANLAR BÖLÜMÜ 
+            // --- EKİPMANLAR BÖLÜMÜ ---
+            Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine("├" + new string('─', 22) + " EKİPMANLAR " + new string('─', 24) + "┤");
 
             string silahBilgi = oyuncu.DonanimliSilah != null
-                ? $"{oyuncu.DonanimliSilah.Ad} (+{oyuncu.DonanimliSilah.EtkiDegeri} Hasar)"
-                : "Yok";
-
+                ? $"{oyuncu.DonanimliSilah.Ad} (+{oyuncu.DonanimliSilah.EtkiDegeri} Hasar)" : "Yok";
             string zirhBilgi = oyuncu.MevcutZirh != null
-                ? $"{oyuncu.MevcutZirh.Ad} (+{oyuncu.MevcutZirh.EtkiDegeri} Savunma)"
-                : "Yok";
+                ? $"{oyuncu.MevcutZirh.Ad} (+{oyuncu.MevcutZirh.EtkiDegeri} Savunma)" : "Yok";
 
             YazdirProfilSatiri("SİLAH", silahBilgi, ConsoleColor.Yellow);
             YazdirProfilSatiri("ZIRH", zirhBilgi, ConsoleColor.Cyan);
 
-            // TOPLAM GÜÇ VE KAPANIŞ
+            // --- TOPLAM GÜÇ VE KAPANIŞ ---
+            Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine("├" + new string('─', panelGenislik) + "┤");
             YazdirProfilSatiri("TOPLAM HASAR", oyuncu.ToplamSaldiriGucu.ToString(), ConsoleColor.Red);
             YazdirProfilSatiri("TOPLAM ZIRH", oyuncu.ToplamSavunma.ToString(), ConsoleColor.Cyan);
 
+            Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine("└" + new string('─', panelGenislik) + "┘");
 
             Console.ResetColor();
@@ -703,22 +725,21 @@ namespace Mini_Oyun
             Console.ReadKey();
         }
 
-        
         private void YazdirProfilSatiri(string baslik, string deger, ConsoleColor degerRengi)
         {
             Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.Write("│ "); // Sol kenar
+            Console.Write("│ ");
 
             Console.ForegroundColor = ConsoleColor.Gray;
-            // Başlığı 14 karakterlik alana yay (Kaymayı önleyen ana parça burası)
+            // Başlık alanı (12 karakter) + süsleme = 18 karakter
             Console.Write($"[{baslik.PadRight(12)}] : ");
 
             Console.ForegroundColor = degerRengi;
-            // Değeri geri kalan 39 karakterlik alana yay
+            // Toplam 58 - 18 = 40 karakterlik değer alanı (Tam hizalama)
             Console.Write(deger.PadRight(39));
 
             Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine(" │"); // Sağ kenar (Artık hep sabit duracak)
+            Console.WriteLine(" │");
         }
 
         public Oge RastgeleOgeUret()
