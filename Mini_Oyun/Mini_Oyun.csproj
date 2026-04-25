@@ -74,6 +74,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Canavar ve Boss.cs" />
+    <Compile Include="GuncellemeSistemi.cs" />
     <Compile Include="Karakter.cs" />
     <Compile Include="LootEntry.cs" />
     <Compile Include="LootManager.cs" />
