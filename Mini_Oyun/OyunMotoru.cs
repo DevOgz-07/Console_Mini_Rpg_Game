@@ -437,25 +437,24 @@ namespace Mini_Oyun
             while (true)
             {
                 Console.Clear();
-                // Ekrandaki sıra numarası ile gerçek eşya nesnesini bağlayan sözlük
                 Dictionary<int, Oge> secimMap = new Dictionary<int, Oge>();
                 int gosterimSirasi = 1;
-                int panelGenislik = 58;
 
                 Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.WriteLine("┌" + new string('─', panelGenislik - 10) + " ENVANTER " + new string('─', 2) + "┐");
+                // Üst Çerçeve
+                Console.WriteLine("┌" + new string('─', 24) + " ENVANTER " + new string('─', 24) + "┐");
 
-                // --- SİLAHLAR ---
-                YazdirKategori("⚔️  SİLAHLAR", "Silah", ConsoleColor.Yellow, ref gosterimSirasi, secimMap);
-                Console.WriteLine("├" + new string('─', panelGenislik) + "┤");
+                // Kategoriler
+                YazdirKategori("⚔️ SİLAHLAR", "Silah", ConsoleColor.Yellow, ref gosterimSirasi, secimMap);
+                Console.WriteLine("├" + new string('─', 58) + "┤");
 
-                // --- ZIRHLAR ---
-                YazdirKategori("🛡️  ZIRHLAR", "Zirh", ConsoleColor.Green, ref gosterimSirasi, secimMap);
-                Console.WriteLine("├" + new string('─', panelGenislik) + "┤");
+                YazdirKategori("🛡️ ZIRHLAR", "Zirh", ConsoleColor.Green, ref gosterimSirasi, secimMap);
+                Console.WriteLine("├" + new string('─', 58) + "┤");
 
-                // --- İKSİRLER ---
                 YazdirKategori("🧪 İKSİRLER", "Tuketilebilir", ConsoleColor.Red, ref gosterimSirasi, secimMap);
-                Console.WriteLine("└" + new string('─', panelGenislik) + "┘");
+
+                // Alt Çerçeve
+                Console.WriteLine("└" + new string('─', 58) + "┘");
 
                 Console.ForegroundColor = ConsoleColor.DarkGray;
                 Console.WriteLine("\n [0] Geri Dön");
@@ -466,11 +465,10 @@ namespace Mini_Oyun
                 {
                     if (secim == 0) break;
 
-                    // Sözlükten ekrandaki numaraya karşılık gelen GERÇEK eşyayı bul
                     if (secimMap.ContainsKey(secim))
                     {
                         Oge secilenOge = secimMap[secim];
-                        // Artık index ile değil, doğrudan eşya nesnesi ile işlem yapıyoruz
+                        // Metot adını Karakter sınıfındaki tanıma göre "OgeKullanNesneIle" olarak düzelttim
                         karakter.OgeKullanNesneIle(secilenOge);
                     }
                     else
@@ -485,25 +483,33 @@ namespace Mini_Oyun
 
         private void YazdirKategori(string baslik, string turFiltresi, ConsoleColor renk, ref int sira, Dictionary<int, Oge> map)
         {
+            // BAŞLIK SATIRI
             Console.Write("│ ");
             Console.ForegroundColor = renk;
+
+            // CS1503 hatasını çözmek için new char[] kullanıyoruz
+            string[] parcalar = baslik.Split(new char[] { ' ' }, 2);
+            string emoji = parcalar[0];
+            string metin = parcalar.Length > 1 ? parcalar[1] : "";
+
             
-            Console.Write(baslik.PadRight(56));
+            Console.Write(emoji + " ");
+            Console.Write(metin.PadRight(53));
+
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine(" │");
 
+            // İÇERİK SATIRLARI (Eşyalar)
             foreach (var oge in oyuncu.Envanter)
             {
-                
+                // Envanterdeki eşyanın türünü kontrol et
                 if (oge.Tur.ToString().Contains(turFiltresi) || oge.Ad.Contains(turFiltresi))
                 {
-                    Console.Write("│  "); 
+                    Console.Write("│  ");
                     Console.ForegroundColor = ConsoleColor.White;
 
-                    
                     string satir = $"[{sira}] {oge.Ad} (+{oge.EtkiDegeri})";
-
-                    
+                    // İçerik satırını 55 karaktere sabitle
                     Console.Write(satir.PadRight(55));
 
                     Console.ForegroundColor = ConsoleColor.Cyan;
@@ -625,63 +631,94 @@ namespace Mini_Oyun
         private void KarakterAyrıntıları()
         {
             Console.Clear();
+            int panelGenislik = 58; // İç alan genişliği (Kenar çizgileri hariç)
 
-
-
-            int gerekenToplamTecrube = oyuncu.SonrakiSeviyeIcinGerekenToplamEXP();
-            int kalanTecrube = gerekenToplamTecrube - oyuncu.Tecrube;
-
-            Console.WriteLine("========================================");
-            Console.WriteLine($"        KARAKTER PROFİLİ: {oyuncu.Ad.ToUpper()} ");
-            Console.WriteLine("========================================");
-            Console.WriteLine($" [SEVİYE]          : {oyuncu.Seviye}");
-            Console.WriteLine($" [CAN]             : {oyuncu.Can} / {oyuncu.MaksimumCan}");
-            Console.WriteLine($" [SALDIRI GÜCÜ]    : {25 + (oyuncu.STR_Stat * 2)}");
-            Console.WriteLine($" [SAVUNMA]         : {1 +  (oyuncu.DEX_Stat * 1)}");
-            Console.WriteLine($" [ALTIN]           : {oyuncu.Altın}");
-            Console.WriteLine($" [KRİTİK ŞANS]     : %{oyuncu.KritikSans}");
-            Console.WriteLine($" [İLERLEME]        : {oyuncu.GetEXPBar()}");
-            Console.WriteLine($" [SEVİYE TP]       : {oyuncu.Tecrube} / {gerekenToplamTecrube}");
-            Console.WriteLine($" [TOPLAM TP]       : {oyuncu.ToplamTecrube}");
-            Console.WriteLine($" [KALAN TP]        : Bir Sonraki Seviye İçin {kalanTecrube} TP lazım.");
-
-
-            Console.WriteLine("----------------------------------------");
-            Console.WriteLine("         TEMEL İSTATİSTİKLER  ");
-            Console.WriteLine("----------------------------------------");
-            Console.WriteLine($" [HP  (Can)]       : {oyuncu.HP_Stat}  -> (Max Can: {oyuncu.MaksimumCan})");
-            Console.WriteLine($" [STR (Güç)]       : {oyuncu.STR_Stat}  -> (Hasar: {25 + (oyuncu.STR_Stat * 2)})");
-            Console.WriteLine($" [DEX (Savunma)]   : {oyuncu.DEX_Stat}  -> (Zırh: {1 + (oyuncu.DEX_Stat * 1)})");
-
-
-            Console.WriteLine("----------------------------------------");
-            Console.WriteLine($" [YETENEK PUANI]   : {oyuncu.YetenekPuani} (Harcanabilir)");
-            Console.WriteLine("========================================");
-
-
-            // Silah Satırı
-            string silahBilgi = oyuncu.DonanimliSilah != null
-            ? $"{oyuncu.DonanimliSilah.Ad} (+{oyuncu.DonanimliSilah.EtkiDegeri} Saldırı)"
-            : "Yok";
-
-            // Zırh Satırı
-            string zirhBilgi = oyuncu.MevcutZirh != null
-            ? $"{oyuncu.MevcutZirh.Ad} (+{oyuncu.MevcutZirh.EtkiDegeri} Savunma)"
-            : "Yok";
-
-            Console.WriteLine($" [KUŞANILMIŞ SİLAH]: {silahBilgi}");
-            Console.WriteLine($" [KUŞANILMIŞ ZIRH] : {zirhBilgi}");
-            Console.WriteLine("========================================");
-
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($" TOPLAM SALDIRI GÜCÜ : {oyuncu.ToplamSaldiriGucu}");
-
+            // ÜST BAŞLIK
             Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine($" TOPLAM SAVUNMA GÜCÜ : {oyuncu.ToplamSavunma}");
-            Console.ResetColor();
+            Console.WriteLine("┌" + new string('─', 20) + " KARAKTER PROFİLİ " + new string('─', 20) + "┐");
 
+            YazdirProfilSatiri("AD", oyuncu.Ad.ToUpper(), ConsoleColor.Yellow);
+            Console.WriteLine("├" + new string('─', panelGenislik) + "┤");
+
+            // TEMEL BİLGİLER
+            YazdirProfilSatiri("SEVİYE", oyuncu.Seviye.ToString(), ConsoleColor.White);
+            YazdirProfilSatiri("CAN", $"{oyuncu.Can} / {oyuncu.MaksimumCan}", ConsoleColor.Red);
+            YazdirProfilSatiri("ALTIN", oyuncu.Altın.ToString(), ConsoleColor.Yellow);
+            YazdirProfilSatiri("KRİTİK", "%" + oyuncu.KritikSans, ConsoleColor.Magenta);
+
+            // İLERLEME ÇUBUĞU (Özel Hizalama)
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.Write("│ ");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            string baslik = "İLERLEME";
+            Console.Write($"[{baslik.PadRight(12)}] : "); 
+
+            
+            string expBar = oyuncu.GetEXPBar(); 
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write(expBar);
+
+            
+            int barUzunlugu = expBar.Length;
+            int kalanBosluk = 58 - 19 - barUzunlugu;
+
+            if (kalanBosluk > 0)
+            {
+                Console.Write(new string(' ', kalanBosluk));
+            }
+
+            
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine(" │");
+
+            // İSTATİSTİKLER BÖLÜMÜ
+            Console.WriteLine("\n├" + new string('─', 21) + " İSTATİSTİKLER " + new string('─', 22) + "┤");
+            YazdirProfilSatiri("HP (Can)", $"{oyuncu.HP_Stat} (+{oyuncu.MaksimumCan - 100} Max Can)", ConsoleColor.Green);
+            YazdirProfilSatiri("STR (Güç)", $"{oyuncu.STR_Stat} (Hasar: {25 + (oyuncu.STR_Stat * 2)})", ConsoleColor.Red);
+            YazdirProfilSatiri("DEX (Sav)", $"{oyuncu.DEX_Stat} (Zırh: {1 + (oyuncu.DEX_Stat * 1)})", ConsoleColor.Blue);
+
+            // EKİPMANLAR BÖLÜMÜ 
+            Console.WriteLine("├" + new string('─', 22) + " EKİPMANLAR " + new string('─', 24) + "┤");
+
+            string silahBilgi = oyuncu.DonanimliSilah != null
+                ? $"{oyuncu.DonanimliSilah.Ad} (+{oyuncu.DonanimliSilah.EtkiDegeri} Hasar)"
+                : "Yok";
+
+            string zirhBilgi = oyuncu.MevcutZirh != null
+                ? $"{oyuncu.MevcutZirh.Ad} (+{oyuncu.MevcutZirh.EtkiDegeri} Savunma)"
+                : "Yok";
+
+            YazdirProfilSatiri("SİLAH", silahBilgi, ConsoleColor.Yellow);
+            YazdirProfilSatiri("ZIRH", zirhBilgi, ConsoleColor.Cyan);
+
+            // TOPLAM GÜÇ VE KAPANIŞ
+            Console.WriteLine("├" + new string('─', panelGenislik) + "┤");
+            YazdirProfilSatiri("TOPLAM HASAR", oyuncu.ToplamSaldiriGucu.ToString(), ConsoleColor.Red);
+            YazdirProfilSatiri("TOPLAM ZIRH", oyuncu.ToplamSavunma.ToString(), ConsoleColor.Cyan);
+
+            Console.WriteLine("└" + new string('─', panelGenislik) + "┘");
+
+            Console.ResetColor();
             Console.WriteLine("\nAna menüye dönmek için bir tuşa basın...");
             Console.ReadKey();
+        }
+
+        
+        private void YazdirProfilSatiri(string baslik, string deger, ConsoleColor degerRengi)
+        {
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.Write("│ "); // Sol kenar
+
+            Console.ForegroundColor = ConsoleColor.Gray;
+            // Başlığı 14 karakterlik alana yay (Kaymayı önleyen ana parça burası)
+            Console.Write($"[{baslik.PadRight(12)}] : ");
+
+            Console.ForegroundColor = degerRengi;
+            // Değeri geri kalan 39 karakterlik alana yay
+            Console.Write(deger.PadRight(39));
+
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine(" │"); // Sağ kenar (Artık hep sabit duracak)
         }
 
         public Oge RastgeleOgeUret()
@@ -747,11 +784,11 @@ namespace Mini_Oyun
                 Console.WriteLine("-----------------------------------------------");
 
                 Console.WriteLine("\n  [1] 🍻 Şehir Hanı (Dinlen ve İyileş)");
-                Console.WriteLine("  [2] ⚖️   Market (Eşya Al/Sat) - [Yakında]");
-                Console.WriteLine("  [3]      Silah Satıcısı - [Yakında]");
-                Console.WriteLine("  [4]      Zırh Satıcısı - [Yakında]");
-                Console.WriteLine("  [5] 🔨   Demirci (Zırh Geliştir) - [Yakında]");
-                Console.WriteLine("  [0] ⬅️    Şehir Kapısından Çık (Ana Menü)");
+                Console.WriteLine("  [2] ⚖️ Market (Eşya Al/Sat) - [Yakında]");
+                Console.WriteLine("  [3]    Silah Satıcısı - [Yakında]");
+                Console.WriteLine("  [4]    Zırh Satıcısı - [Yakında]");
+                Console.WriteLine("  [5] 🔨 Demirci (Zırh Geliştir) - [Yakında]");
+                Console.WriteLine("  [0] ⬅️ Şehir Kapısından Çık (Ana Menü)");
 
                 Console.ForegroundColor = ConsoleColor.DarkGray;
                 Console.Write("\n  Nereye gitmek istersin?: ");
