@@ -21,10 +21,11 @@ namespace Mini_Oyun
     }
     internal class Program
     {
-        static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             Console.OutputEncoding = System.Text.Encoding.UTF8;
             Oyun_Motoru motor = new Oyun_Motoru();
+            bool guncellemeMevcut = await GuncellemeSistemi.YeniGuncellemeVarMi();
 
             Console.Title = "MİNİ RPG: KARANLIK DÜNYA";
             Console.ForegroundColor = ConsoleColor.Cyan;
@@ -42,6 +43,9 @@ namespace Mini_Oyun
                 while (oyuncu == null)
                 {
                     Console.Clear();
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.WriteLine($"[ 📦 Oyun Sürümü: {GuncellemeSistemi.MevcutVersiyon} ]");
+                    Console.ResetColor();
                     Console.ForegroundColor = ConsoleColor.Yellow;
                     Console.WriteLine("===============================================");
                     Console.WriteLine("        🛡️  ANA MENÜ - HOŞ GELDİNİZ  🛡️        ");
@@ -51,6 +55,12 @@ namespace Mini_Oyun
                     Console.WriteLine("\n[1] 📥 Kayıtlı Hesaba Giriş Yap");
                     Console.WriteLine("[2] 📝 Yeni Hesap Oluştur");
                     Console.WriteLine("[3] 👤 Misafir Modu (Kaydedilmez)");
+                    if (guncellemeMevcut)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine("[4] 🚀 YENİ GÜNCELLEME MEVCUT! (Hemen Yükle)");
+                        Console.ResetColor();
+                    }
                     Console.WriteLine("[0] ❌ Uygulamadan Tamamen Çık");
 
                     Console.ForegroundColor = ConsoleColor.DarkGray;
@@ -126,6 +136,16 @@ namespace Mini_Oyun
                         oyuncu = misafir;
                         Console.WriteLine("\n[!] Misafir girişi yapıldı.");
                         Thread.Sleep(1500);
+                    }
+                    else if (secim == "4" && guncellemeMevcut)
+                    {
+                        Console.Clear();
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine("\n[!] Güncelleme paketi GitHub üzerinden çekiliyor...");
+
+                        await GuncellemeSistemi.GuncellemeBaslat();
+
+                        return;
                     }
                     else
                     {

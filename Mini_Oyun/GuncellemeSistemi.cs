@@ -1,83 +1,112 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Net;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 
 public class GuncellemeSistemi
 {
-    private const string MevcutVersiyon = "v1.0.0";
-    private const string GithubKullaniciAdi = "DevOgz-07"; 
-    private const string RepoAdi = "Console_Mini_Rpg_Game"; 
+    public const string MevcutVersiyon = "v1.0.3";
+    private const string GithubKullaniciAdi = "DevOgz-07";
+    private const string RepoAdi = "Console_Mini_Rpg_Game";
     private const string UygulamaAdi = "Mini_Oyun.exe";
 
-    public static async Task GuncellemeDenetle()
+    // SADECE KONTROL EDER (Menüde seçenek göstermek için)
+    public static async Task<bool> YeniGuncellemeVarMi()
     {
+        var handler = new HttpClientHandler() { AllowAutoRedirect = true };
         try
         {
-            using (HttpClient client = new HttpClient())
+            using (HttpClient client = new HttpClient(handler))
             {
                 client.DefaultRequestHeaders.Add("User-Agent", "C#-Game-Updater");
                 string url = $"https://api.github.com/repos/{GithubKullaniciAdi}/{RepoAdi}/releases/latest";
-                var response = await client.GetStringAsync(url);
+                var responseJson = await client.GetStringAsync(url);
 
-                using (JsonDocument doc = JsonDocument.Parse(response))
+                using (JsonDocument doc = JsonDocument.Parse(responseJson))
                 {
                     string enSonVersiyon = doc.RootElement.GetProperty("tag_name").GetString();
+                    return enSonVersiyon != MevcutVersiyon;
+                }
+            }
+        }
+        catch { return false; }
+    }
 
-                    if (enSonVersiyon != MevcutVersiyon)
+    // GÜNCELLEMEYİ BAŞLATIR (Seçenek seçilince çalışır)
+    public static async Task GuncellemeBaslat()
+    {
+        var handler = new HttpClientHandler() { AllowAutoRedirect = true };
+        try
+        {
+            using (HttpClient client = new HttpClient(handler))
+            {
+                client.DefaultRequestHeaders.Add("User-Agent", "C#-Game-Updater");
+                string url = $"https://api.github.com/repos/{GithubKullaniciAdi}/{RepoAdi}/releases/latest";
+                var responseJson = await client.GetStringAsync(url);
+
+                using (JsonDocument doc = JsonDocument.Parse(responseJson))
+                {
+                    Console.Clear();
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.WriteLine("╔═════════════════════════════════════════════════════════╗");
+                    Console.WriteLine("║            🚀 GÜNCELLEME İŞLEMİ BAŞLADI                 ║");
+                    Console.WriteLine("╚═════════════════════════════════════════════════════════╝");
+
+                    string indirmeUrl = "";
+                    var assets = doc.RootElement.GetProperty("assets");
+                    foreach (var asset in assets.EnumerateArray())
                     {
-                        Console.Clear();
-                        Console.ForegroundColor = ConsoleColor.Cyan;
-                        Console.WriteLine("╔═════════════════════════════════════════════════════════╗");
-                        Console.WriteLine("║            🚀 YENİ SÜRÜM OTOMATİK YÜKLENİYOR            ║");
-                        Console.WriteLine("╚═════════════════════════════════════════════════════════╝");
-                        Console.WriteLine($"\n[!] Yeni versiyon tespit edildi: {enSonVersiyon}");
-                        Console.WriteLine("[!] Dosyalar indiriliyor, lütfen beklemeyin...");
+                        if (asset.GetProperty("name").GetString() == UygulamaAdi)
+                        {
+                            indirmeUrl = asset.GetProperty("browser_download_url").GetString();
+                            break;
+                        }
+                    }
 
-                        // Asset listesinden ilk exe linkini çekiyoruz
-                        string indirmeUrl = doc.RootElement.GetProperty("assets")[0].GetProperty("browser_download_url").GetString();
-
-                        await DosyaIndirVeKur(indirmeUrl);
+                    if (!string.IsNullOrEmpty(indirmeUrl))
+                    {
+                        await DosyaIndirVeKur(indirmeUrl, client);
                     }
                 }
             }
         }
         catch (Exception ex)
         {
-            // İnternet yoksa veya hata varsa oyunu başlat
-            Console.WriteLine("\n[!] Güncelleme sunucusuna bağlanılamadı, oyun başlatılıyor...");
-            await Task.Delay(1000);
+            Console.WriteLine($"\n[!] Hata: {ex.Message}");
+            await Task.Delay(2000);
         }
     }
 
-    private static async Task DosyaIndirVeKur(string url)
+    private static async Task DosyaIndirVeKur(string url, HttpClient client)
     {
         string geciciDosya = "Mini_Oyun_Yeni.exe";
         string mevcutExe = UygulamaAdi;
 
-        using (WebClient wc = new WebClient())
+        var response = await client.GetAsync(url);
+        using (var fs = new FileStream(geciciDosya, FileMode.Create, FileAccess.Write, FileShare.None))
         {
-            await wc.DownloadFileTaskAsync(new Uri(url), geciciDosya);
+            await response.Content.CopyToAsync(fs);
         }
 
-        // Kendi kendini güncelleme sihirbazı (Batch Script)
-        // Bu script eski exe'yi siler, yenisini isimlendirir ve oyunu tekrar açar
-        string batchKomutları = $@"
+        string batchKomutlari = $@"
 @echo off
 timeout /t 2 /nobreak > nul
-del ""{mevcutExe}""
-ren ""{geciciDosya}"" ""{mevcutExe}""
+taskkill /f /im ""{mevcutExe}"" > nul 2>&1
+if exist ""{mevcutExe}"" del /f /q ""{mevcutExe}""
+if exist ""{geciciDosya}"" ren ""{geciciDosya}"" ""{mevcutExe}""
 start """" ""{mevcutExe}""
 del ""%~f0""
 ";
-        File.WriteAllText("updater.bat", batchKomutları);
+        File.WriteAllText("updater.bat", batchKomutlari);
 
-        ProcessStartInfo psi = new ProcessStartInfo("updater.bat") { CreateNoWindow = true, UseShellExecute = false };
+        ProcessStartInfo psi = new ProcessStartInfo("updater.bat")
+        {
+            CreateNoWindow = true,
+            UseShellExecute = false
+        };
         Process.Start(psi);
-
-        Environment.Exit(0); // Eski sürümü hemen kapat
+        Environment.Exit(0);
     }
 }
