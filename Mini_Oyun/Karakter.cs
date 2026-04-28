@@ -9,6 +9,10 @@ namespace Mini_Oyun
 {
     internal class Karakter
     {
+        // NPC LER İÇİN OLAN KISIM 
+        public bool BoranTanindi { get; set; }
+        public bool EleraTanindi { get; set; }
+        
         public string Sifre { get; set; }
         public string Ad { get; set; }
         public int Can { get; set; }

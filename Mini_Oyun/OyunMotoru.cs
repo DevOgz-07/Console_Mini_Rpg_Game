@@ -18,6 +18,7 @@ namespace Mini_Oyun
         public static int temizlenenGrupSayisi = 0;
         // private Random random = new Random(); Eskisi için geçerli idi şimdi lazım değil ama kalabilir.
         // Canavarları Random Getiremek için Kullanıldı Bölge işe girince savaş başlat parametresinde geçersiz kaldı.
+        
 
         public void SetOyuncu(Karakter k) { this.oyuncu = k; }
 
@@ -35,6 +36,7 @@ namespace Mini_Oyun
             oyuncu = karakter;
         }
 
+        #region OYUN KAYDETME VE YÜKLEME SİSTEMİ (Gelişmiş Güvenlik Önlemleriyle)
         public string SifreOku()
         {
             string sifre = "";
@@ -61,23 +63,89 @@ namespace Mini_Oyun
         {
             if (k == null) return;
             string dosyaAdi = $"{k.Ad}_kayit.json";
-            var secenekler = new JsonSerializerOptions { WriteIndented = true };
-            string jsonVerisi = JsonSerializer.Serialize(k, secenekler);
-            File.WriteAllText(dosyaAdi, jsonVerisi);
 
+            
+            string jsonVerisi = JsonSerializer.Serialize(k);
+
+            
+            string gizliVeri = Convert.ToBase64String(Encoding.UTF8.GetBytes(jsonVerisi));
+
+            
+            string imza = Sifreleme.HashHesapla(gizliVeri + "Gumusisik2026!");
+
+            
+            File.WriteAllText(dosyaAdi, imza + Environment.NewLine + gizliVeri);
+        }
+
+        public static class Sifreleme
+        {
+            public static string HashHesapla(string veri)
+            {
+                using (var sha256 = System.Security.Cryptography.SHA256.Create())
+                {
+                    byte[] bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(veri));
+                    return BitConverter.ToString(bytes).Replace("-", "").ToLower();
+                }
+            }
         }
 
         public Karakter OyunuYukle(string ad)
         {
             string dosyaAdi = $"{ad}_kayit.json";
-            if (File.Exists(dosyaAdi))
-            {
-                string jsonVerisi = File.ReadAllText(dosyaAdi);
-                return JsonSerializer.Deserialize<Karakter>(jsonVerisi);
-            }
-            return null;
-        }
 
+            if (!File.Exists(dosyaAdi)) return null;
+
+            string[] satirlar = File.ReadAllLines(dosyaAdi);
+            if (satirlar.Length < 2) return null;
+
+            string dosyadakiImza = satirlar[0];
+            string dosyadakiGizliVeri = satirlar[1];
+
+            // GÜVENLİK KONTROLÜ
+            if (Sifreleme.HashHesapla(dosyadakiGizliVeri + "Gumusisik2026!") == dosyadakiImza)
+            {
+                
+                string orijinalJson = Encoding.UTF8.GetString(Convert.FromBase64String(dosyadakiGizliVeri));
+                return JsonSerializer.Deserialize<Karakter>(orijinalJson);
+            }
+            else
+            {
+                // HİLE ALGILANDI
+                Console.Clear();
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("************************************************");
+                Console.WriteLine($"[GÜVENLİK İHLALİ] {ad.ToUpper()} KAYDI TAHRİF EDİLMİŞ!");
+                Console.WriteLine("[!] İlerlemeniz silindi. Hesap sıfırlanıyor...");
+                Console.WriteLine("************************************************");
+                Console.ResetColor();
+
+                
+                Console.Write("\nHesabınız için yeni bir şifre belirleyin: ");
+                string yeniSifre = Console.ReadLine();
+
+                
+                Karakter yeniKarakter = new Karakter
+                {
+                    Ad = ad,
+                    Sifre = yeniSifre, 
+                    Seviye = 1,
+                    Altın = 0,
+                    Can = 100,
+                    BoranTanindi = false, 
+                    EleraTanindi = false
+                };
+
+                OyunuKaydet(yeniKarakter);
+
+                Console.WriteLine("\n[✓] Hesap başarıyla sıfırlandı ve yeni şifreniz kaydedildi.");
+                Thread.Sleep(2000);
+
+                return yeniKarakter;
+            }
+        }
+        #endregion
+
+        #region CANAVAR VE BOSS OLUŞTURMA METOTLARI (Veritabanından Dinamik Yükleme)
         private void CanavarlariOlustur()
         {
             canavarHavuzu.AddRange(CanavarVeritabani.TumCommonCanavarlar);
@@ -93,7 +161,9 @@ namespace Mini_Oyun
         {
             canavarHavuzu.AddRange(CanavarVeritabani.TumBossCanavarlar);
         }
+        #endregion
 
+        #region OYUN DÖNGÜSÜ VE SAVAŞ MEKANİĞİ (Gelişmiş Görsel Düzen ve Detaylı Savaş Logları)
         public void OyunuBaslat()
         {
 
@@ -450,9 +520,10 @@ namespace Mini_Oyun
 
             return "[" + new string('█', doluKisim) + new string('░', barGenislik - doluKisim) + $"] {suAn}/{maks}";
         }
+        #endregion
 
 
-
+        #region ENVANTER MENÜSÜ (Gelişmiş Görsel Düzen ve Seçim Sistemi)    
         private void EnvanterMenusu(Karakter karakter)
         {
             while (true)
@@ -541,7 +612,7 @@ namespace Mini_Oyun
                 }
             }
         }
-
+        #endregion
         private void StatYukseltmeMenusu()
         {
             bool menudeyim = true;
@@ -648,7 +719,7 @@ namespace Mini_Oyun
             }
         }
 
-
+        #region KARAKTER PROFİLİ YAZDIRMA METODU (Gelişmiş Görsel Düzen ve Detaylı Bilgi)
         private void KarakterAyrıntıları()
         {
             Console.Clear();
@@ -741,6 +812,7 @@ namespace Mini_Oyun
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine(" │");
         }
+        #endregion
 
         public Oge RastgeleOgeUret()
         {
@@ -787,7 +859,7 @@ namespace Mini_Oyun
             return new Oge(esyaAdı, secilenNadirlik, secilenTur, etki);
         }
 
-        public void SehreGit(Karakter karakter) // MARKET SİLAH ZIRH DEMİRCİ YAKINDA EKLENECEK ŞU AN İÇİN HAN VE DİNLENME VAR
+        public void SehreGit(Karakter karakter) 
         {
             bool sehirdeyim = true;
 
@@ -820,15 +892,10 @@ namespace Mini_Oyun
                 switch (secim)
                 {
                     case "1":
-                        SehirHani(); // Han metoduna git
+                        SehirHani(); 
                         break;
                     case "2":
-                        Console.Clear();
-                        Console.WriteLine("\n🛒 MARKET SOKAĞI");
-                        Console.WriteLine("----------------");
-                        Console.WriteLine("Tüccar kervanı henüz şehre ulaşmadı. (Yapım Aşamasında)");
-                        Console.WriteLine("\nDönmek için bir tuşa bas...");
-                        Console.ReadKey();
+                        MarketSistemi(); 
                         break;
                     case "0":
                         sehirdeyim = false;
@@ -841,48 +908,290 @@ namespace Mini_Oyun
             }
         }
 
+        #region HAN DİYALOGLARI VE ETKİNLİKLERİ
         public void SehirHani()
         {
+            
+            string hanciAd = oyuncu.BoranTanindi ? "Boran" : "???";
+            string hanciRol = oyuncu.BoranTanindi ? "Hancı" : "İçki Dağıtan Adam";
+
+            NPC hanci = new NPC(hanciAd, hanciRol, new string[] {
+               "Gümüşışık eski günlerini arıyor yolcu. Gölgeler her geçen gün daha da uzuyor.",
+               "Kuzeydeki mühürlerin zayıfladığını söylüyorlar... Umarım yanılıyorlardır.",
+               "Geçen gece ormanda tuhaf ışıklar gördüm. Kadim bir şeyler uyanıyor olabilir."
+            });
+
             Console.Clear();
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("--- 🍻 GÜMÜŞIŞIK HANI ---");
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine($"Hoş geldin, {oyuncu.Ad}!");
             Console.ResetColor();
 
-            if (oyuncu.Can >= oyuncu.MaksimumCan)
+            if (!oyuncu.BoranTanindi)
             {
-                Console.WriteLine("\nHancı: 'Zaten turp gibisin evlat! Git de biraz canavar avla.'");
-                Console.WriteLine("\nAna menüye dönmek için bir tuşa bas...");
-                Console.ReadKey();
-                return;
+                Console.WriteLine("\nTezgahın arkasında eski, yara izleriyle dolu bir adam duruyor.");
+                Console.WriteLine("Seni görünce başıyla hafifçe selam veriyor ama gözlerindeki şüpheyi gizlemiyor.");
             }
 
-            Console.WriteLine($"\nHancı: 'Oldukça bitkin görünüyorsun. 25 Altına sıcak bir yemek ve temiz bir yatak ister misin?'");
-            Console.WriteLine($"[Cüzdanın: {oyuncu.Altın} 💰]");
-            Console.WriteLine("\n  [1] Evet, İyileş (-25 💰)");
-            Console.WriteLine("  [0] Hayır, kalsın.");
+            hanci.Konus();
+
+            Console.WriteLine($"\n[Cüzdanın: {oyuncu.Altın} 💰 | Sağlığın: {oyuncu.Can}/{oyuncu.MaksimumCan}]");
+            Console.WriteLine("\n  [1] Sıcak bir yemek ve yatak (-25 💰)");
+
+            if (!oyuncu.BoranTanindi)
+                Console.WriteLine("  [2] 'Burayı kim işletiyor? Adın ne?'");
+            else
+                Console.WriteLine("  [2] Hancıya bölgedeki dedikoduları sor");
+
+            Console.WriteLine("  [0] Kapıdan dışarı süzül.");
             Console.Write("\nKararın: ");
 
             string hancıSecim = Console.ReadLine();
 
             if (hancıSecim == "1")
             {
-                if (oyuncu.Altın >= 25)
+                HanciDinlenme(hanci);
+            }
+            else if (hancıSecim == "2")
+            {
+                if (!oyuncu.BoranTanindi)
                 {
-                    oyuncu.Altın -= 25;
-                    oyuncu.Can = oyuncu.MaksimumCan;
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine("\n[!] Güzelce dinlendin ve tüm yaraların iyileşti!");
-                    Console.ResetColor();
+                    BoranTanismaDiyalogu();
                 }
                 else
                 {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("\nHancı: Yeterli Paran Yok");
-                    Console.ResetColor();
+                    HanciDiyalog(hanci);
                 }
-                Thread.Sleep(1500);
             }
         }
+
+        private void BoranTanismaDiyalogu()
+        {
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine("Adam elindeki bardağı temizlemeyi bırakıp sana doğru eğiliyor.");
+            Console.WriteLine("\n'Adımın bir önemi yoktu, ta ki bu kasaba unutulmaya başlayana kadar.'");
+            Console.WriteLine("'Ben Boran. Bu hanın ve bu sırların son bekçisiyim.'");
+            Console.WriteLine("'Herkes buraya bir şeylerden kaçmak için gelir, ama kimse nereye gittiğini bilmez.'");
+            Console.ResetColor();
+
+            oyuncu.BoranTanindi = true; 
+            OyunuKaydet(oyuncu); 
+
+            Console.BackgroundColor = ConsoleColor.Red;
+            Console.WriteLine("\n[Artık Boran'ı tanıyorsun. Gümüşışık'ta bir dostun var gibi hissediyorsun.]");
+            Console.ResetColor();
+            Console.WriteLine("\nDevam etmek için bir tuşa bas...");
+            Console.ReadKey();
+            SehirHani();
+        }
+
+        private void HanciDiyalog(NPC npc)
+        {
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine($"--- 🍻 {npc.Ad.ToUpper()} İLE SOHBET ---");
+            Console.ResetColor();
+
+            Console.WriteLine($"\n[{npc.Ad}]: 'Söyle bakalım evlat, Gümüşışık'ın hangi sırrı uykularını kaçırıyor?'");
+
+            Console.WriteLine("\n  [1] 'Şehir neden bu kadar sessiz?'");
+            Console.WriteLine("  [2] 'Kuzeydeki mühürler hakkında ne biliyorsun?'");
+            Console.WriteLine("  [3] 'Geçen gece gördüğün o ışıklar da neydi?'");
+            Console.WriteLine("  [0] 'Boşver, sadece bakıyordum.'");
+
+            Console.Write("\nSorun: ");
+            string sohbetSecim = Console.ReadLine();
+
+            Console.Clear();
+            switch (sohbetSecim)
+            {
+                case "1":
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.WriteLine($"[{npc.Ad}]: 'Sessizlik her zaman huzur demek değildir.\nGümüşışık'ın altındaki kadim zindanlarda bir şeyler nefes alıyor... Kasaba halkı konuşmaya korkuyor.'");
+                    Console.ResetColor();
+                    break;
+                case "2":
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.WriteLine($"[{npc.Ad}]: 'Eskiler, mühürlerin Işığın Elçileri tarafından yerleştirildiğini söyler.\nEğer onlar zayıflarsa, sadece bu kasaba değil, tüm dünya karanlığa gömülür.'");
+                    Console.ResetColor();
+                    break;
+                case "3":
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.WriteLine($"[{npc.Ad}]: 'O ışıklar... Onlar sahipsiz ruhlar değil evlat.\nSisli Dağlar'dan gelen bir çağrı gibiydiler. Sanki birisi -veya bir şey- kayıp olanı geri istiyor.'");
+                    Console.ResetColor();
+                    break;
+                default:
+                    SehirHani();
+                    return;
+            }
+
+            Console.BackgroundColor = ConsoleColor.DarkBlue;
+            Console.WriteLine("\n[Bu derin bilgiler zihninde yeni kapılar açtı...]");
+            Console.ResetColor();
+            Console.WriteLine("\nDevam etmek için bir tuşa bas...");
+            Console.ReadKey();
+            HanciDiyalog(npc); 
+        }
+
+        private void HanciDinlenme(NPC hanci)
+        {
+            if (oyuncu.Altın >= 25)
+            {
+                oyuncu.Altın -= 25;
+                oyuncu.Can = oyuncu.MaksimumCan;
+
+                Console.Clear();
+                Console.WriteLine($"\n[{hanci.Ad}]: 'Güzel seçim evlat. Bu çorba seni kendine getirecek.'");
+                Console.WriteLine("\nGeceyi hancının anlattığı eski savaş hikayelerini dinleyerek geçiriyorsun...");
+                Thread.Sleep(2000);
+
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("\n[!] Sabahın ilk ışıklarıyla uyandın. Yaraların tamamen kapandı!");
+                Console.ResetColor();
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"\n[{hanci.Ad}]: 'Seni doyurmayı çok isterdim ama ambarım hayır dualarıyla dolmuyor...'");
+                Console.ResetColor();
+            }
+            Console.WriteLine("\nDevam etmek için bir tuşa bas...");
+            Console.ReadKey();
+        }
+        #endregion
+
+        #region MARKET DİYALOGLARI VE ETKİNLİKLERİ
+        public void MarketSistemi()
+        {
+            string gorunenAd = oyuncu.EleraTanindi ? "Elera" : "???";
+            string gorunenRol = oyuncu.EleraTanindi ? "Kadim Tüccar" : "Gölgelerdeki Kadın";
+
+            NPC elera = new NPC(gorunenAd, gorunenRol, new string[] {
+                "Gözlerin bana birini hatırlatıyor...",
+                "Eski dünya hakkında çok az şey kaldı, bu eşyalar onlardan biri."
+            });
+
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.Magenta;
+            Console.WriteLine($"--- ⚖️ {gorunenAd.ToUpper()}'NIN TEZGAHI ---");
+            Console.ResetColor();
+
+            if (!oyuncu.EleraTanindi)
+            {
+                Console.WriteLine("\nTezgahın arkasında, yüzü pelerininin gölgesinde kalmış bir kadın duruyor.");
+            }
+            else
+            {
+                Console.WriteLine($"\nElera: 'Yine geldin demek, {oyuncu.Ad}. Tezgahım senin için her zaman açık.'");
+            }
+
+            elera.Konus();
+            Console.WriteLine($"\n[Cüzdanın: {oyuncu.Altın} 💰]");
+
+            // İstediğin o düzenli sıralama yapısı:
+            Console.WriteLine("\n  [1] ⚔️ Eşya Satın Al");
+            Console.WriteLine("  [2] 💰 Elindekileri Sat");
+
+            if (!oyuncu.EleraTanindi)
+                Console.WriteLine("  [3] 👤 'Sen de kimsin?'");
+            else
+                Console.WriteLine("  [3] 📜 Geçmiş Hakkında Konuş");
+
+            Console.WriteLine("  [0] 🚪 Ayrıl");
+
+            Console.Write("\nSeçimin: ");
+            string secim = Console.ReadLine();
+
+            switch (secim)
+            {
+                case "1": EsyaAlimMenusu(elera); break;
+                case "2": EsyaSatimMenusu(elera); break;
+                case "3":
+                    if (!oyuncu.EleraTanindi) EleraDiyaloglar(elera);
+                    else EleraDiyaloglar(elera);
+                    break;
+                case "0": return;
+                default: MarketSistemi(); break;
+            }
+        }
+
+        private void EleraDiyaloglar(NPC elera)
+        {
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.Magenta;
+            Console.WriteLine($"--- 📜 {elera.Ad.ToUpper()} İLE KADİM SOHBET ---");
+            Console.ResetColor();
+
+            Console.WriteLine($"\n[{elera.Ad}]: 'Sormak istediğin şeylerin bedeli altından daha ağırdır çocuk. Ne bilmek istiyorsun?'");
+
+            Console.WriteLine("\n  [1] 'Sisli Dağlar'daki kütüphaneye ne oldu?'");
+            Console.WriteLine("  [2] 'Neden hancıyla aranızda bir gerginlik var?'");
+            Console.WriteLine("  [3] 'Karanlık gerçekten geri mi dönüyor?'");
+            Console.WriteLine("  [0] 'Sadece bakıyordum.'");
+
+            Console.Write("\nSorun: ");
+            string sohbetSecim = Console.ReadLine();
+
+            Console.Clear();
+            switch (sohbetSecim)
+            {
+                case "1":
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.WriteLine($"[{elera.Ad}]: 'Kütüphane yanmadı çocuk, o kütüphane infaz edildi. \nİçindeki sırlar birilerinin uykusunu kaçırıyordu. Kurtarabildiğim tek şey bu parşömenler...'");
+                    Console.ResetColor();
+                    break;
+                case "2":
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.WriteLine($"[{elera.Ad}]: 'Boran iyi bir adamdır ama fazla korkak. Gümüşışık'ın altındaki hapishaneyi unutmak istiyor. \nBen ise o hapishanenin anahtarının neden dövüldüğünü hatırlıyorum.'");
+                    Console.ResetColor();
+                    break;
+                case "3":
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.WriteLine($"[{elera.Ad}]: 'Karanlık hiç gitmedi ki... Sadece güneşin doğmasını bekleyen bir gölge gibi köşesinde saklandı. \nVe şimdi güneş batıyor.'");
+                    Console.ResetColor();
+                    break;
+                default: MarketSistemi(); return;
+            }
+
+            Console.BackgroundColor = ConsoleColor.DarkBlue;
+            Console.WriteLine("\n[Bu derin bilgiler zihninde yeni kapılar açtı...]");
+            Console.ResetColor();
+            Console.WriteLine("\nDevam etmek için bir tuşa bas...");
+            Console.ReadKey();
+            EleraDiyaloglar(elera);
+        }
+
+        private void EsyaAlimMenusu(NPC elera)
+        {
+            Console.Clear();
+            Console.WriteLine($"--- ⚔️ {elera.Ad}'NIN TEZGAHI ---");
+            Console.WriteLine($"\n[Cüzdanın: {oyuncu.Altın} 💰]");
+            Console.WriteLine("\n  [1] Paslı Uzun Kılıç (+10 Hasar)  - 30 💰");
+            Console.WriteLine("  [2] Çelik Göğüslük   (+15 Savunma) - 60 💰");
+            Console.WriteLine("  [3] Kadim İksir      (+50 Can)     - 25 💰");
+            Console.WriteLine("  [0] Vazgeç");
+
+            Console.Write("\nElera: 'Hangisi senin kaderini değiştirecek?': ");
+            string alimSecim = Console.ReadLine();
+
+            
+        }
+
+        private void EsyaSatimMenusu(NPC elera)
+        {
+            Console.Clear();
+            Console.WriteLine($"--- 💰 EŞYA SATIŞ ---");
+            Console.WriteLine($"\n[{elera.Ad}]: 'Elimde gümüş çok, senin işine yaramayanlar benim hazinem olabilir. Ne veriyorsun?'");
+
+            
+            Console.WriteLine("\n[Envanterin Boş!]"); 
+            Console.WriteLine("\nDevam etmek için bir tuşa bas...");
+            Console.ReadKey();
+            MarketSistemi();
+        }
+        #endregion
 
         public void BolgeSecimiYap()
         {

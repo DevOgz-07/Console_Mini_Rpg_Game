@@ -28,5 +28,18 @@ namespace Mini_Oyun
             Console.WriteLine($"\n[{Ad} - {Rol}]: \"{secilenDiyalog}\"");
             Console.ResetColor();
         }
+        public void Konus(int hikayeAdimi)
+        {
+            if (hikayeAdimi < Diyaloglar.Length)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine($"\n[{Ad} - {Rol}]: \"{Diyaloglar[hikayeAdimi]}\"");
+                Console.ResetColor();
+            }
+            else
+            {
+                Konus(); 
+            }
+        }
     }
 }
