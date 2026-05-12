@@ -125,7 +125,7 @@ namespace Mini_Oyun
                         oyuncu.Envanter.Add(new Oge("Acemi Kılıcı", Nadirlik.Common, OgeTuru.Silah, 5));
                         oyuncu.Envanter.Add(new Oge("Küçük Can İksiri", Nadirlik.Common, OgeTuru.Tuketilebilir, 20));
 
-                        motor.OyunuKaydet(oyuncu);
+                        OyunuKaydet(oyuncu);
                         Console.WriteLine("\nKayıt oluşturuldu!");
                         Thread.Sleep(1500);
                     }
