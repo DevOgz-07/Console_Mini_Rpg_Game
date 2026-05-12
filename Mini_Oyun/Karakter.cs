@@ -7,12 +7,16 @@ using System.Threading.Tasks;
 
 namespace Mini_Oyun
 {
-    internal class Karakter
+    public class Karakter
     {
         // NPC LER İÇİN OLAN KISIM 
         public bool BoranTanindi { get; set; }
         public bool EleraTanindi { get; set; }
-        
+        public bool SaticiTanisildiMi { get; set; } = false;
+        public int SaticiKonusmaSayisi { get; set; } = 0;
+
+        public bool AethelredTanindi { get; set; }
+
         public string Sifre { get; set; }
         public string Ad { get; set; }
         public int Can { get; set; }
@@ -44,7 +48,7 @@ namespace Mini_Oyun
 
         public Oge MevcutZirh { get; set; }
 
-        public Karakter() { }
+        public  Karakter() { }
 
         public Karakter(string ad)
         {
@@ -197,10 +201,39 @@ namespace Mini_Oyun
             // 1. İKSİR KULLANIMI (Tüketilebilir)
             if (secilenOge.Tur == OgeTuru.Tuketilebilir)
             {
-                Can += secilenOge.EtkiDegeri;
-                if (Can > MaksimumCan) Can = MaksimumCan;
-                Console.WriteLine($"\n[!] {secilenOge.Ad} kullandınız. Güncel Can: {Can}");
-                Envanter.Remove(secilenOge); // Nesneyi doğrudan listeden siliyoruz
+                
+                if (Can >= MaksimumCan)
+                {
+                    Thread.Sleep(2000);
+                    Console.WriteLine("\n[!] Canınız zaten tamamen dolu!");
+                }
+                else
+                {
+                    Can += secilenOge.EtkiDegeri;
+                    if (Can > MaksimumCan) Can = MaksimumCan;
+
+                    // STACK MANTIĞI: Miktarı 1 azalt
+                    secilenOge.Miktar--;
+                    Thread.Sleep(2000);
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine($"\n[🧪] {secilenOge.Ad} kullandınız. (+{secilenOge.EtkiDegeri} HP)");
+                    Console.WriteLine($"[📊] Güncel Can: {Can}/{MaksimumCan}");
+                    Oyun_Motoru.OyunuKaydet(this);
+                    Console.ResetColor();
+
+                    
+                    if (secilenOge.Miktar <= 0)
+                    {
+                        Thread.Sleep(2000);
+                        Envanter.Remove(secilenOge);
+                        Console.WriteLine("[!] İksir yığınınız tükendi.");
+                    }
+                    else
+                    {
+                        Thread.Sleep(2000);
+                        Console.WriteLine($"[📦] Kalan miktar: {secilenOge.Miktar}");
+                    }
+                }
             }
             // 2. SİLAH KUŞANMA
             else if (secilenOge.Tur == OgeTuru.Silah)
@@ -209,12 +242,11 @@ namespace Mini_Oyun
                 {
                     Envanter.Add(DonanimliSilah);
                     SaldiriGucu -= DonanimliSilah.EtkiDegeri;
-                    Console.WriteLine($"\n[!] {DonanimliSilah.Ad} çıkarıldı.");
                 }
                 DonanimliSilah = secilenOge;
                 SaldiriGucu += DonanimliSilah.EtkiDegeri;
-                Envanter.Remove(secilenOge); // Index karmaşası olmadan nesneyi siliyoruz
-                Console.WriteLine($"\n[!] {DonanimliSilah.Ad} kuşandınız! Toplam Saldırı Gücü: {SaldiriGucu}");
+                Envanter.Remove(secilenOge);
+                Console.WriteLine($"\n[⚔️] {DonanimliSilah.Ad} kuşandınız! Güç: {SaldiriGucu}");
             }
             // 3. ZIRH KUŞANMA
             else if (secilenOge.Tur == OgeTuru.Zirh)
@@ -223,17 +255,16 @@ namespace Mini_Oyun
                 {
                     Envanter.Add(MevcutZirh);
                     Savunma -= MevcutZirh.EtkiDegeri;
-                    Console.WriteLine($"\n[!] {MevcutZirh.Ad} çıkarıldı.");
                 }
                 MevcutZirh = secilenOge;
                 Savunma += MevcutZirh.EtkiDegeri;
                 Envanter.Remove(secilenOge);
                 Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.WriteLine($"\n[!] {MevcutZirh.Ad} kuşandınız! Toplam Savunma: {Savunma}");
+                Console.WriteLine($"\n[🛡️] {MevcutZirh.Ad} kuşandınız! Savunma: {Savunma}");
                 Console.ResetColor();
             }
 
-            Thread.Sleep(1000); // Mesajın okunması için bekleme
+            Thread.Sleep(1000);
         }
         #endregion
 
