@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Text.Json;
-using System.IO;
 
 
 namespace Mini_Oyun
@@ -18,7 +20,7 @@ namespace Mini_Oyun
         public static int temizlenenGrupSayisi = 0;
         // private Random random = new Random(); Eskisi için geçerli idi şimdi lazım değil ama kalabilir.
         // Canavarları Random Getiremek için Kullanıldı Bölge işe girince savaş başlat parametresinde geçersiz kaldı.
-        
+
 
         public void SetOyuncu(Karakter k) { this.oyuncu = k; }
 
@@ -59,22 +61,35 @@ namespace Mini_Oyun
             return sifre;
         }
 
-        public void OyunuKaydet(Karakter k)
+        public static void OyunuKaydet(Karakter k)
         {
             if (k == null) return;
-            string dosyaAdi = $"{k.Ad}_kayit.json";
 
-            
-            string jsonVerisi = JsonSerializer.Serialize(k);
+            try
+            {
+                string dosyaAdi = $"{k.Ad}_kayit.json";
 
-            
-            string gizliVeri = Convert.ToBase64String(Encoding.UTF8.GetBytes(jsonVerisi));
+                
+                var options = new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    ReferenceHandler = ReferenceHandler.IgnoreCycles // KRİTİK SATIR
+                };
 
-            
-            string imza = Sifreleme.HashHesapla(gizliVeri + "Gumusisik2026!");
+                string jsonVerisi = JsonSerializer.Serialize(k, options);
+                string gizliVeri = Convert.ToBase64String(Encoding.UTF8.GetBytes(jsonVerisi));
+                string imza = Sifreleme.HashHesapla(gizliVeri + "Gumusisik2026!");
 
-            
-            File.WriteAllText(dosyaAdi, imza + Environment.NewLine + gizliVeri);
+                File.WriteAllText(dosyaAdi, imza + Environment.NewLine + gizliVeri);
+
+                
+                 Console.WriteLine($"\n[💾] {k.Ad} başarıyla kaydedildi."); 
+            }
+            catch (Exception ex)
+            {
+                // Hatayı görmek için burayı geçici olarak açabilirsin:
+                // Console.WriteLine("Kayıt Hatası: " + ex.Message);
+            }
         }
 
         public static class Sifreleme
@@ -104,7 +119,7 @@ namespace Mini_Oyun
             // GÜVENLİK KONTROLÜ
             if (Sifreleme.HashHesapla(dosyadakiGizliVeri + "Gumusisik2026!") == dosyadakiImza)
             {
-                
+
                 string orijinalJson = Encoding.UTF8.GetString(Convert.FromBase64String(dosyadakiGizliVeri));
                 return JsonSerializer.Deserialize<Karakter>(orijinalJson);
             }
@@ -119,19 +134,19 @@ namespace Mini_Oyun
                 Console.WriteLine("************************************************");
                 Console.ResetColor();
 
-                
+
                 Console.Write("\nHesabınız için yeni bir şifre belirleyin: ");
                 string yeniSifre = Console.ReadLine();
 
-                
+
                 Karakter yeniKarakter = new Karakter
                 {
                     Ad = ad,
-                    Sifre = yeniSifre, 
+                    Sifre = yeniSifre,
                     Seviye = 1,
                     Altın = 0,
                     Can = 100,
-                    BoranTanindi = false, 
+                    BoranTanindi = false,
                     EleraTanindi = false
                 };
 
@@ -318,26 +333,26 @@ namespace Mini_Oyun
                     Console.ForegroundColor = ConsoleColor.Cyan;
                     Console.WriteLine("\n┌────────────────────── KAHRAMAN ──────────────────────────┐");
 
-                    
+
                     Console.Write("│ ");
 
-                   
+
                     Console.ForegroundColor = ConsoleColor.Green;
                     string adVeSeviye = $"{oyuncu.Ad} (Lvl: {oyuncu.Seviye})";
                     string oyuncuCanBar = CanBariCiz(oyuncu.Can, oyuncu.MaksimumCan);
                     string ustIcerik = $"{adVeSeviye,-18} {oyuncuCanBar}";
-                    Console.Write(ustIcerik.PadRight(56)); 
+                    Console.Write(ustIcerik.PadRight(56));
 
-                    
+
                     Console.ForegroundColor = ConsoleColor.Cyan;
                     Console.WriteLine(" │");
 
-                    
+
                     Console.Write("│ ");
                     Console.ForegroundColor = ConsoleColor.Cyan;
-                    
+
                     string statlar = $"GÜÇ: {oyuncu.SaldiriGucu,-4} │ SAVUNMA: {oyuncu.Savunma,-4} │ ALTIN: {oyuncu.Altın,-6} 💰";
-                    Console.Write(statlar.PadRight(56)); 
+                    Console.Write(statlar.PadRight(56));
 
                     Console.ForegroundColor = ConsoleColor.Cyan;
                     Console.WriteLine(" │");
@@ -390,7 +405,7 @@ namespace Mini_Oyun
                     Console.Clear();
                     Console.ForegroundColor = ConsoleColor.Yellow;
                     Console.WriteLine("╔═════════════════════════════════════════════════════════╗");
-                    Console.WriteLine("║                       🏆 ZAFER 🏆                       ║");
+                    Console.WriteLine("║                        🏆 ZAFER 🏆                       ║");
                     Console.WriteLine("╚═════════════════════════════════════════════════════════╝");
                     Console.ResetColor();
 
@@ -400,7 +415,7 @@ namespace Mini_Oyun
                     oyuncu.TecrubeKazan(toplamExp);
                     oyuncu.Altın += toplamAltin;
 
-                    // EXP Bar Hesaplamaları (Mantığın Korundu)
+                    // EXP Bar Hesaplamaları
                     int baslangicEXP = oyuncu.MevcutSeviyeBaslangicEXP();
                     int gerekenEXP = oyuncu.SonrakiSeviyeIcinGerekenToplamEXP();
                     int mevcutIlerleme = oyuncu.Tecrube - baslangicEXP;
@@ -414,12 +429,10 @@ namespace Mini_Oyun
                     Console.WriteLine($"📊 Seviye İlerlemesi: [%{(int)yuzde}]");
                     Console.WriteLine(CanBariCiz((int)yuzde, 100));
 
-
-                    // GRUP GANİMETİ MANTIĞI (Aynen Korundu)
+                    // GRUP GANİMETİ MANTIĞI
                     temizlenenGrupSayisi++;
                     if (temizlenenGrupSayisi % 3 == 0)
                     {
-                        // --- GANİMET DÜŞME MANTIĞI ---
                         Console.ForegroundColor = ConsoleColor.Magenta;
                         Console.WriteLine("\n✨ TEBRİKLER: 3. Grup Temizlendi! Nadir Ganimetler Toplanıyor...");
                         Console.WriteLine("--- 📦 NADİR GRUP GANİMETLERİ ---");
@@ -429,17 +442,26 @@ namespace Mini_Oyun
                         foreach (var canavar in slotlar)
                             tumPotansiyelLoot.AddRange(LootManager.LootDusur(canavar));
 
-                        
                         int alinacakMiktar = (rnd.Next(1, 101) <= 2) ? 2 : 1;
                         var secilenGanimetler = tumPotansiyelLoot.OrderByDescending(o => o.Nadirlik).Take(alinacakMiktar).ToList();
 
                         foreach (var oge in secilenGanimetler)
                         {
-                            if (oyuncu.Envanter.Count < 20)
+                            // STACK KONTROLÜ: Envanterde aynı isimde ve yer olan bir slot var mı?
+                            var mevcutStack = oyuncu.Envanter.Find(x => x.Ad == oge.Ad && x.Miktar < x.MaksimumStack);
+
+                            if (mevcutStack != null)
+                            {
+                                // Zaten varsa sadece miktarını artır (Envanter doluluğuna bakmaya gerek yok)
+                                mevcutStack.Miktar++;
+                                Console.ForegroundColor = Oge.NadirlikRengiGetir(oge.Nadirlik);
+                                Console.WriteLine($" > {oge.Ad} (x{mevcutStack.Miktar}) mevcut yığına eklendi.");
+                            }
+                            else if (oyuncu.Envanter.Count < 20) // Yeni bir slot gerekiyorsa yer var mı?
                             {
                                 oyuncu.Envanter.Add(oge);
                                 Console.ForegroundColor = Oge.NadirlikRengiGetir(oge.Nadirlik);
-                                Console.WriteLine($" > {oge.Ad} bulundu! Envantere eklendi.");
+                                Console.WriteLine($" > {oge.Ad} bulundu! Yeni envanter slotuna eklendi.");
                             }
                             else
                             {
@@ -451,9 +473,7 @@ namespace Mini_Oyun
                     }
                     else
                     {
-                        
                         int kalan = 3 - (temizlenenGrupSayisi % 3);
-
                         Console.ForegroundColor = ConsoleColor.DarkGray;
                         if (kalan == 1)
                         {
@@ -466,50 +486,69 @@ namespace Mini_Oyun
                         }
                         Console.ResetColor();
                     }
-
-                    if (!oyuncu.Ad.StartsWith("Misafir_")) OyunuKaydet(oyuncu);
-
-                    // SAVAŞ SONRASI SEÇENEKLERİ
-                    bool kararVerildi = false;
-                    while (!kararVerildi)
-                    {
-                        Console.WriteLine("\n[1] Keşfe Devam  [2] Şehre Dön  [3] Envanter  [0] Çıkış");
-                        Console.Write("Seçiminiz: ");
-                        string sSecim = Console.ReadLine();
-                        if (sSecim == "1") kararVerildi = true;
-                        else if (sSecim == "2") { SehreGit(oyuncu); return; }
-                        else if (sSecim == "3") { EnvanterMenusu(oyuncu); }
-                        else if (sSecim == "0") return;
-                    }
                 }
-                else if (!oyuncu.HayattaMi())
+
+                if (!oyuncu.Ad.StartsWith("Misafir_")) OyunuKaydet(oyuncu);
+
+                // SAVAŞ SONRASI SEÇENEKLERİ
+                bool kararVerildi = false;
+                while (!kararVerildi)
                 {
-                    Console.Clear();
-                    
-                    oyuncu.Can = 0;
+                    Console.WriteLine("\n[1] Keşfe Devam [2] Şehre Dön [3] Envanter [0] Çıkış");
+                    Console.Write("Seçiminiz: ");
+                    string sSecim = Console.ReadLine();
 
-                    Console.ForegroundColor = ConsoleColor.DarkRed;
-                    Console.WriteLine("╔═════════════════════════════════════════════════════════╗");
-                    Console.WriteLine("║                    💀 MAĞLUBİYET 💀                     ║");
-                    Console.WriteLine("╚═════════════════════════════════════════════════════════╝");
+                    if (sSecim == "1")
+                    {
+                        kararVerildi = true;
+                    }
+                    else if (sSecim == "2")
+                    {
+                        SehreGit(oyuncu);
+                        return;
+                    }
+                    else if (sSecim == "3")
+                    {
+                        EnvanterMenusu(oyuncu);
+                    }
+                    else if (sSecim == "0")
+                    {
+                        return;
+                    }
 
-                    Console.WriteLine($"\n [!] {oyuncu.Ad.ToUpper()} karanlığa yenik düştü...");
-                    Console.WriteLine(" [!] Bilincin kapanırken Gümüşışık surlarını sayıklıyorsun.");
-                    Console.ResetColor();
 
-                    Console.WriteLine("\n-----------------------------------------------------------");
-                    Console.WriteLine(" Gözlerini açtığında kendini Gümüşışık'ta bulacaksın...");
-                    Console.WriteLine("-----------------------------------------------------------");
 
-                    Console.WriteLine("\n[Devam etmek için bir tuşa bas...]");
-                    Console.ReadKey();
 
-                    
-                    bolgeKesifDevam = false;
-                    SehreGit(oyuncu);
+                    else if (!oyuncu.HayattaMi())
+                    {
+                        Console.Clear();
+
+                        oyuncu.Can = 0;
+
+                        Console.ForegroundColor = ConsoleColor.DarkRed;
+                        Console.WriteLine("╔═════════════════════════════════════════════════════════╗");
+                        Console.WriteLine("║                    💀 MAĞLUBİYET 💀                     ║");
+                        Console.WriteLine("╚═════════════════════════════════════════════════════════╝");
+
+                        Console.WriteLine($"\n [!] {oyuncu.Ad.ToUpper()} karanlığa yenik düştü...");
+                        Console.WriteLine(" [!] Bilincin kapanırken Gümüşışık surlarını sayıklıyorsun.");
+                        Console.ResetColor();
+
+                        Console.WriteLine("\n-----------------------------------------------------------");
+                        Console.WriteLine(" Gözlerini açtığında kendini Gümüşışık'ta bulacaksın...");
+                        Console.WriteLine("-----------------------------------------------------------");
+
+                        Console.WriteLine("\n[Devam etmek için bir tuşa bas...]");
+                        Console.ReadKey();
+
+
+                        bolgeKesifDevam = false;
+                        SehreGit(oyuncu);
+                    }
                 }
             }
         }
+
 
         
         public string CanBariCiz(int suAn, int maks)
@@ -560,13 +599,26 @@ namespace Mini_Oyun
                     if (secimMap.ContainsKey(secim))
                     {
                         Oge secilenOge = secimMap[secim];
-                        // Metot adını Karakter sınıfındaki tanıma göre "OgeKullanNesneIle" olarak düzelttim
-                        karakter.OgeKullanNesneIle(secilenOge);
-                    }
-                    else
-                    {
-                        Console.WriteLine("Hatalı seçim!");
-                        Thread.Sleep(800);
+
+                        
+                        secilenOge.DetaySayfasiGoster(karakter);
+
+                        string detaySecim = Console.ReadLine();
+                        if (detaySecim == "1")
+                        {
+                            
+                            if (karakter.Seviye < secilenOge.GerekenSeviye)
+                            {
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.WriteLine("\n [!] Seviyen bu kadim eşyayı kullanmaya yetmiyor!");
+                                Console.ResetColor();
+                                Thread.Sleep(1500);
+                            }
+                            else
+                            {
+                                karakter.OgeKullanNesneIle(secilenOge); 
+                            }
+                        }
                     }
                 }
             }
@@ -579,12 +631,10 @@ namespace Mini_Oyun
             Console.Write("│ ");
             Console.ForegroundColor = renk;
 
-            // CS1503 hatasını çözmek için new char[] kullanıyoruz
             string[] parcalar = baslik.Split(new char[] { ' ' }, 2);
             string emoji = parcalar[0];
             string metin = parcalar.Length > 1 ? parcalar[1] : "";
 
-            
             Console.Write(emoji + " ");
             Console.Write(metin.PadRight(53));
 
@@ -594,21 +644,30 @@ namespace Mini_Oyun
             // İÇERİK SATIRLARI (Eşyalar)
             foreach (var oge in oyuncu.Envanter)
             {
-                // Envanterdeki eşyanın türünü kontrol et
-                if (oge.Tur.ToString().Contains(turFiltresi) || oge.Ad.Contains(turFiltresi))
+                // Tür kontrolünü daha kesin yapmak için Equals veya direkt Enum kontrolü önerilir
+                if (oge.Tur.ToString() == turFiltresi)
                 {
                     Console.Write("│  ");
-                    Console.ForegroundColor = ConsoleColor.White;
 
-                    string satir = $"[{sira}] {oge.Ad} (+{oge.EtkiDegeri})";
+                    // Nadirlik rengini eşyanın adına uygula
+                    Console.ForegroundColor = Oge.NadirlikRengiGetir(oge.Nadirlik);
+
+                    // STACK GÖSTERİMİ: Miktar 1'den büyükse (x5) şeklinde ekle
+                    string miktarGosterimi = oge.Miktar > 1 ? $" (x{oge.Miktar})" : "";
+                    string satir = $"[{sira}] {oge.Ad}{miktarGosterimi} (+{oge.EtkiDegeri})";
+
                     // İçerik satırını 55 karaktere sabitle
                     Console.Write(satir.PadRight(55));
 
                     Console.ForegroundColor = ConsoleColor.Cyan;
                     Console.WriteLine(" │");
 
-                    map.Add(sira, oge);
-                    sira++;
+                    
+                    if (!map.ContainsKey(sira))
+                    {
+                        map.Add(sira, oge);
+                        sira++;
+                    }
                 }
             }
         }
@@ -678,7 +737,7 @@ namespace Mini_Oyun
                 {
                     menudeyim = false;
                 }
-                else if (secim == "1" || secim == "2" || secim == "3")
+                else if (secim == "1" || secim == "2" || secim == "3") // HER İŞLEMDEN SONRA KAYDEDİLECEK ŞEKİLDE AYARLANDI.
                 {
                     if (oyuncu.YetenekPuani > 0)
                     {
@@ -690,6 +749,8 @@ namespace Mini_Oyun
                             oyuncu.Can = oyuncu.MaksimumCan;
                             oyuncu.YetenekPuani -= 1;
                             Console.WriteLine("\n[+] Vücudun daha dayanıklı hale geliyor! (HP Yükseltildi)");
+                            Console.WriteLine("Oyun otomatik olarak kaydediliyor...");
+                            OyunuKaydet(oyuncu);
                         }
                         else if (secim == "2")
                         {
@@ -697,6 +758,8 @@ namespace Mini_Oyun
                             oyuncu.SaldiriGucu = 25 + (oyuncu.STR_Stat * 2);
                             oyuncu.YetenekPuani -= 1;
                             Console.WriteLine("\n[+] Kasların güçleniyor, vuruşların derinleşiyor! (STR Yükseltildi)");
+                            Console.WriteLine("Oyun otomatik olarak kaydediliyor...");
+                            OyunuKaydet(oyuncu);
                         }
                         else if (secim == "3")
                         {
@@ -704,6 +767,8 @@ namespace Mini_Oyun
                             oyuncu.Savunma = 1 + (oyuncu.DEX_Stat * 1);
                             oyuncu.YetenekPuani -= 1;
                             Console.WriteLine("\n[+] Reflekslerin keskinleşiyor! (DEX Yükseltildi)");
+                            Console.WriteLine("Oyun otomatik olarak kaydediliyor...");
+                            OyunuKaydet(oyuncu);
                         }
                         Console.ResetColor();
                         Thread.Sleep(1200);
@@ -876,10 +941,10 @@ namespace Mini_Oyun
                 Console.WriteLine($"  👤 {oyuncu.Ad} | ❤️ Can: {oyuncu.Can}/{oyuncu.MaksimumCan} | 💰 Altın: {oyuncu.Altın}");
                 Console.WriteLine("-----------------------------------------------");
 
-                Console.WriteLine("\n  [1] 🍻 Şehir Hanı (Dinlen ve İyileş)");
-                Console.WriteLine("  [2] ⚖️ Market (Eşya Al/Sat) - [Yakında]");
-                Console.WriteLine("  [3]    Silah Satıcısı - [Yakında]");
-                Console.WriteLine("  [4]    Zırh Satıcısı - [Yakında]");
+                Console.WriteLine("\n  [1] 🍻 Şehir Hancısı Boran (Dinlen ve İyileş)");
+                Console.WriteLine("  [2] ⚖️ Market Elera (İksir AL/Sat) - [Yakında]");
+                Console.WriteLine("  [3] ⚔️ Silah Satıcısı Borgath - [Kılıç Al/Sat]");
+                Console.WriteLine("  [4] 🛡️ Zırh Satıcısı - Aethelred - [Zırh Al/Sat]");
                 Console.WriteLine("  [5] 🔨 Demirci (Zırh Geliştir) - [Yakında]");
                 Console.WriteLine("  [0] ⬅️ Şehir Kapısından Çık (Ana Menü)");
 
@@ -896,6 +961,12 @@ namespace Mini_Oyun
                         break;
                     case "2":
                         MarketSistemi(); 
+                        break;
+                    case "3":
+                        SilahSaticisi();
+                        break;
+                    case "4":
+                        ZırhSaticisi();
                         break;
                     case "0":
                         sehirdeyim = false;
@@ -1090,7 +1161,7 @@ namespace Mini_Oyun
             elera.Konus();
             Console.WriteLine($"\n[Cüzdanın: {oyuncu.Altın} 💰]");
 
-            // İstediğin o düzenli sıralama yapısı:
+            
             Console.WriteLine("\n  [1] ⚔️ Eşya Satın Al");
             Console.WriteLine("  [2] 💰 Elindekileri Sat");
 
@@ -1109,12 +1180,33 @@ namespace Mini_Oyun
                 case "1": EsyaAlimMenusu(elera); break;
                 case "2": EsyaSatimMenusu(elera); break;
                 case "3":
-                    if (!oyuncu.EleraTanindi) EleraDiyaloglar(elera);
+                    if (!oyuncu.EleraTanindi) EleraTanısmaDiyalogu();
                     else EleraDiyaloglar(elera);
                     break;
                 case "0": return;
                 default: MarketSistemi(); break;
             }
+        }
+
+        private void EleraTanısmaDiyalogu() 
+        {
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine("Adam elindeki bardağı temizlemeyi bırakıp sana doğru eğiliyor.");
+            Console.WriteLine("\n'Adımın bir önemi yoktu, ta ki bu kasaba unutulmaya başlayana kadar.'");
+            Console.WriteLine("'Ben Boran. Bu hanın ve bu sırların son bekçisiyim.'");
+            Console.WriteLine("'Herkes buraya bir şeylerden kaçmak için gelir, ama kimse nereye gittiğini bilmez.'");
+            Console.ResetColor();
+
+            oyuncu.EleraTanindi = true;
+            OyunuKaydet(oyuncu);
+
+            Console.BackgroundColor = ConsoleColor.Red;
+            Console.WriteLine("\n[Artık Elera'yı tanıyorsun. Gümüşışık'ta keşfedeceğin daha çok şey var.]");
+            Console.ResetColor();
+            Console.WriteLine("\nDevam etmek için bir tuşa bas...");
+            Console.ReadKey();
+            MarketSistemi();
         }
 
         private void EleraDiyaloglar(NPC elera)
@@ -1166,32 +1258,653 @@ namespace Mini_Oyun
         private void EsyaAlimMenusu(NPC elera)
         {
             Console.Clear();
-            Console.WriteLine($"--- ⚔️ {elera.Ad}'NIN TEZGAHI ---");
-            Console.WriteLine($"\n[Cüzdanın: {oyuncu.Altın} 💰]");
-            Console.WriteLine("\n  [1] Paslı Uzun Kılıç (+10 Hasar)  - 30 💰");
-            Console.WriteLine("  [2] Çelik Göğüslük   (+15 Savunma) - 60 💰");
-            Console.WriteLine("  [3] Kadim İksir      (+50 Can)     - 25 💰");
-            Console.WriteLine("  [0] Vazgeç");
+            Console.ForegroundColor = ConsoleColor.Magenta;
+            Console.WriteLine($"--- 🧪 {elera.Ad.ToUpper()}'NIN SİHRİ ---");
+            Console.ResetColor();
 
-            Console.Write("\nElera: 'Hangisi senin kaderini değiştirecek?': ");
+            Console.WriteLine($"\n[Cüzdanın: {oyuncu.Altın} 💰]");
+            Console.WriteLine("\n  [1] [🧪] Küçük Can İksiri (Birim: 15 💰)");
+            Console.WriteLine("  [2] [🧪] Kadim İksir      (Birim: 30 💰)");
+            Console.WriteLine("  [3] [🧪] Dev İksiri       (Birim: 55 💰)");
+            Console.WriteLine("  [0] [🔙] Vazgeç");
+
+            Console.Write($"\n{elera.Ad}: 'Hangi iksirden ne kadar istersin?': ");
             string alimSecim = Console.ReadLine();
 
-            
+            switch (alimSecim)
+            {
+                case "1":
+                    SatinAl(elera, "Küçük Can İksiri", 15, Nadirlik.Common, 25, "Şifası bol olsun.");
+                    break;
+                case "2":
+                    SatinAl(elera, "Kadim İksir", 30, Nadirlik.Rare, 50, "Kadim güçler seninle.");
+                    break;
+                case "3":
+                    SatinAl(elera, "Dev İksiri", 55, Nadirlik.Epic, 100, "Dikkat et, çok güçlüdür!");
+                    break;
+                case "0": MarketSistemi(); return;
+                default: EsyaAlimMenusu(elera); break;
+            }
+        }
+
+        private void SatinAl(NPC elera, string esyaAdi, int birimFiyat, Nadirlik nadirlik, int etki, string eleraYorumu)
+        {
+            // Miktarı oyuncuya soruyoruz
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Write($"\n[{elera.Ad}]: Kaç adet {esyaAdi} almak istersin? (Maksimum 200): ");
+            Console.ResetColor();
+
+            // Geçerli bir sayı girilip girilmediğini kontrol ediyoruz
+            if (!int.TryParse(Console.ReadLine(), out int alinacakMiktar) || alinacakMiktar <= 0)
+            {
+                Console.WriteLine("\n[!] Geçersiz bir miktar girdin.");
+                Console.ReadKey();
+                MarketSistemi();
+                return;
+            }
+
+            // Girdi 200'den büyükse 200'e sabitliyoruz
+            if (alinacakMiktar > 200) alinacakMiktar = 200;
+
+            int toplamFiyat = birimFiyat * alinacakMiktar;
+
+            // 1. Altın Kontrolü (Toplam fiyat üzerinden)
+            if (oyuncu.Altın < toplamFiyat)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"\n[{elera.Ad}]: '{alinacakMiktar} adet için {toplamFiyat} altına ihtiyacın var. Sende {oyuncu.Altın} var.'");
+                Console.ResetColor();
+                Console.ReadKey();
+                MarketSistemi();
+                return;
+            }
+
+            // 2. Envanter ve Stack Kontrolü
+            var mevcutStack = oyuncu.Envanter.Find(x => x.Ad == esyaAdi && x.Miktar < x.MaksimumStack);
+
+            if (mevcutStack != null)
+            {
+                // Mevcut yığının kapasitesini kontrol et (200'ü geçmesin)
+                int eklenebilir = mevcutStack.MaksimumStack - mevcutStack.Miktar;
+                int gercekEkleme = Math.Min(alinacakMiktar, eklenebilir);
+
+                mevcutStack.Miktar += gercekEkleme;
+                oyuncu.Altın -= (birimFiyat * gercekEkleme);
+            }
+            else if (oyuncu.Envanter.Count < 20)
+            {
+                // Envanterde yoksa yeni slot aç ve girilen miktarı ata
+                oyuncu.Envanter.Add(new Oge(esyaAdi, nadirlik, OgeTuru.Tuketilebilir, etki, miktar: alinacakMiktar));
+                oyuncu.Altın -= toplamFiyat;
+            }
+            else
+            {
+                Console.WriteLine("\n[!] Çantan tamamen dolu!");
+                Console.ReadKey();
+                MarketSistemi();
+                return;
+            }
+
+            // 3. Başarı Ekranı
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("--- 📦 SATIN ALIM BAŞARILI ---");
+            Console.ResetColor();
+            Console.WriteLine($"\n[{elera.Ad}]: '{eleraYorumu}'");
+
+            int toplamEnvanter = oyuncu.Envanter.Where(x => x.Ad == esyaAdi).Sum(x => x.Miktar);
+            Console.WriteLine($"\n [!] {alinacakMiktar} adet {esyaAdi} alındı!");
+            Console.WriteLine($" [📦] Çantandaki Toplam: x{toplamEnvanter}");
+            Console.WriteLine($" [📉] Kalan Altın: {oyuncu.Altın} 💰");
+
+            OyunuKaydet(oyuncu);
+            Console.WriteLine("\nDevam etmek için bir tuşa bas...");
+            Console.ReadKey();
+            MarketSistemi();
+        }
+
+        private int SatisFiyatiHesapla(Oge oge)
+        {
+            switch (oge.Nadirlik)
+            {
+                case Nadirlik.Common:
+                    return 15;
+                case Nadirlik.Uncommon:
+                    return 40;
+                case Nadirlik.Rare:
+                    return 80;
+                case Nadirlik.Epic:
+                    return 150;
+                case Nadirlik.Legendary:
+                    return 300;
+                case Nadirlik.Mythic:
+                    return 600;
+                default:
+                    return 10;
+            }
         }
 
         private void EsyaSatimMenusu(NPC elera)
         {
             Console.Clear();
-            Console.WriteLine($"--- 💰 EŞYA SATIŞ ---");
-            Console.WriteLine($"\n[{elera.Ad}]: 'Elimde gümüş çok, senin işine yaramayanlar benim hazinem olabilir. Ne veriyorsun?'");
+            Console.WriteLine($"--- 💰 {elera.Ad.ToUpper()} SATIŞ TEZGAHI ---");
+            Console.WriteLine($"[Cüzdanın: {oyuncu.Altın} 💰]\n");
 
-            
-            Console.WriteLine("\n[Envanterin Boş!]"); 
-            Console.WriteLine("\nDevam etmek için bir tuşa bas...");
-            Console.ReadKey();
-            MarketSistemi();
+            if (oyuncu.Envanter.Count == 0)
+            {
+                Console.WriteLine("Çantan bomboş...");
+                Console.ReadKey();
+                MarketSistemi();
+                return;
+            }
+
+            for (int i = 0; i < oyuncu.Envanter.Count; i++)
+            {
+                var oge = oyuncu.Envanter[i];
+                int fiyat = SatisFiyatiHesapla(oge);
+
+                
+                Console.WriteLine($"  [{i + 1}] {oge.Ad.PadRight(20)} (x{oge.Miktar}) -> {fiyat} 💰");
+            }
+
+            Console.Write("\nSatmak istediğin eşyanın numarası: ");
+            string secimInput = Console.ReadLine();
+
+            if (int.TryParse(secimInput, out int secim) && secim > 0 && secim <= oyuncu.Envanter.Count)
+            {
+                var satilanOge = oyuncu.Envanter[secim - 1];
+                int kazanc = SatisFiyatiHesapla(satilanOge);
+
+                Console.Clear();
+
+                
+                if (satilanOge.Nadirlik >= Nadirlik.Epic)
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine($"[{elera.Ad} Gözleri Fal Taşı Gibi Açılarak]: 'Bu... Bu gerçek olamaz! {satilanOge.Ad} efsanelerde anlatılırdı.'");
+                    Console.WriteLine("'Bunu dükkanımın en kıymetli köşesine koyacağım. Al şu altınları, fazlasını bile hak ediyorsun.'");
+                }
+                else if (satilanOge.Nadirlik == Nadirlik.Rare)
+                {
+                    Console.WriteLine($"[{elera.Ad}]: 'Güzel bir parça. Gümüşışık'ta böyle temiz işçilik az bulunur.'");
+                }
+                else
+                {
+                    Console.WriteLine($"[{elera.Ad}]: 'Sıradan bir iş ama işime yarar. Al bakalım.'");
+                }
+
+                
+                oyuncu.Altın += kazanc;
+                oyuncu.Envanter.RemoveAt(secim - 1);
+
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"\n[💰] {satilanOge.Ad} ({satilanOge.Nadirlik}) satıldı!");
+                Console.WriteLine($"[➕] Hesaba Eklenen: {kazanc} Altın");
+                Console.ResetColor();
+                Console.WriteLine($"[💳] Yeni Bakiyen: {oyuncu.Altın} Altın");
+
+                
+                OyunuKaydet(oyuncu);
+
+                Console.WriteLine("\n  [1] Başka bir şey sat");
+                Console.WriteLine("  [0] Market ana menüsüne dön");
+                Console.Write("\nKararın: ");
+
+                string devamSecim = Console.ReadLine();
+
+                if (devamSecim == "1")
+                {
+                    EsyaSatimMenusu(elera); 
+                }
+                else
+                {
+                    MarketSistemi(); 
+                }
+            }
+            else if (secimInput == "0")
+            {
+                MarketSistemi(); 
+            }
+            else
+            {
+                Console.WriteLine("\n[!] Geçersiz seçim. Menüye dönülüyor...");
+                Thread.Sleep(1500);
+                MarketSistemi();
+            }
         }
         #endregion
+
+        #region SİLAH SATICISI VE ETKİNLİKLERİ 
+        public void SilahSaticisi()
+        {
+            
+            string gorunenAd = oyuncu.SaticiTanisildiMi ? "Borgath" : "Asık Suratlı Dev";
+            string gorunenRol = oyuncu.SaticiTanisildiMi ? "Usta Silah Dövmecisi" : "Demir Yığını Arkasındaki Adam";
+
+            NPC borgath = new NPC(gorunenAd, gorunenRol, new string[] {
+               "Çelik yalan söylemez evlat, sadece insanlar söyler.",
+               "Bu kılıçların her birinde bir askerin son nefesi var..."
+            });
+
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.DarkYellow;
+            Console.WriteLine($"--- ⚒️ {gorunenAd.ToUpper()}'IN CEPHANESİ ---");
+            Console.ResetColor();
+
+            if (!oyuncu.SaticiTanisildiMi)
+            {
+                Console.WriteLine("\nTezgahın arkasında, kolları yanık izleriyle dolu, devasa bir adam zırh parçalarını ayıklıyor.");
+            }
+            else
+            {
+                Console.WriteLine($"\nBorgath: 'Yine mi sen? Umarım kılıcını kırmamışsındır, {oyuncu.Ad}. Çeliğe iyi bakmazsan o da seni korumaz.'");
+            }
+
+            borgath.Konus();
+            Console.WriteLine($"\n[Cüzdanın: {oyuncu.Altın} 💰]");
+
+            Console.WriteLine("\n  [1] ⚔️ Yeni Silah Satın Al");
+            Console.WriteLine("  [2] 💰 Eski Ekipmanlarını Sat");
+
+            if (!oyuncu.SaticiTanisildiMi)
+                Console.WriteLine("  [3] 👤 'Burada ne yapıyorsun?' (Tanış)");
+            else
+                Console.WriteLine("  [3] 📜 Cephe Hikayelerini Dinle");
+
+            Console.WriteLine("  [0] 🚪 Ayrıl");
+
+            Console.Write("\nSeçimin: ");
+            string secim = Console.ReadLine();
+
+            switch (secim)
+            {
+                case "1": SilahAlimMenusu(borgath); break;
+                case "2": EkipmanSatimMenusu(borgath); break;
+                case "3":
+                    if (!oyuncu.SaticiTanisildiMi) BorgathTanismaDiyalogu();
+                    else BorgathHikayeleri(borgath);
+                    break;
+                case "0": return;
+                default: SilahSaticisi(); break;
+            }
+        }
+
+        private void BorgathTanismaDiyalogu()
+        {
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("Adam elindeki ağır çekici tezgaha bırakıyor, ses dükkanda yankılanıyor.");
+            Console.WriteLine("\n'Benim adım Borgath. Bir zamanlar Krallık Muhafızları'nın baş demircisiydim.'");
+            Console.WriteLine("'Ama o parlak zırhların içindeki adamların nasıl çürüdüğünü gördüm ve buraya geldim.'");
+            Console.WriteLine("'Burada sadece çelikle konuşurum. Eğer dürüst bir savaşçıysan, sana en iyi işçiliğimi sunarım.'");
+            Console.ResetColor();
+
+            oyuncu.SaticiTanisildiMi = true;
+            OyunuKaydet(oyuncu);
+
+            Console.BackgroundColor = ConsoleColor.DarkGray;
+            Console.WriteLine("\n[Artık Borgath'ı tanıyorsun. Sana olan saygısı biraz arttı.]");
+            Console.ResetColor();
+            Console.WriteLine("\nDevam etmek için bir tuşa bas...");
+            Console.ReadKey();
+            SilahSaticisi   ();
+        }
+
+        private void BorgathHikayeleri(NPC borgath)
+        {
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.DarkYellow;
+            Console.WriteLine($"--- 📜 {borgath.Ad.ToUpper()} İLE CEPHE SOHBETİ ---");
+            Console.ResetColor();
+
+            Console.WriteLine($"\n[{borgath.Ad}]: 'Savaş hakkında anlatılan masalları boş ver. Gerçekler daha paslıdır. Ne bilmek istiyorsun?'");
+
+            Console.WriteLine("\n  [1] 'Neden ordudan ayrıldın?'");
+            Console.WriteLine("  [2] 'Gümüşışık'ın surları neden bu kadar zayıf?'");
+            Console.WriteLine("  [3] 'Hiç efsanevi bir silah dövdün mü?'");
+            Console.WriteLine("  [4] 'Karanlık güçler çeliğe zarar verebilir mi?'");
+            Console.WriteLine("  [0] 'Geri dön.'");
+
+            Console.Write("\nSorun: ");
+            string sohbetSecim = Console.ReadLine();
+
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            switch (sohbetSecim)
+            {
+                case "1":
+                    Console.WriteLine($"[{borgath.Ad}]: 'Komutanlar benden daha keskin kılıçlar istiyordu, masumları daha hızlı kesmek için. \nO gün çekicimi onların değil, adaletin tarafına vurmaya karar verdim.'");
+                    break;
+                case "2":
+                    Console.WriteLine($"[{borgath.Ad}]: 'Çünkü surları taş değil, korku tutar evlat. Buradaki insanlar canavarlardan o kadar korkuyor ki, \nsurları onarmaya cesaretleri bile yok. Ama benim demirim o surlardan daha sağlamdır.'");
+                    break;
+                case "3":
+                    Console.WriteLine($"[{borgath.Ad}]: 'Bir keresinde güneş ışığını emen bir kalkan dövmüştüm... Ama o şimdi bir hainin elinde. \nArtık sadece hak edenlere efsanevi şeyler yapıyorum.'");
+                    break;
+                case "4":
+                    Console.WriteLine($"[{borgath.Ad}]: 'Karanlık çeliği eritmez, onu yozlaştırır. Eğer kılıcının soğuduğunu ve ağırlaştığını hissedersen, \nbil ki ruhuna bir şeyler sızıyordur. Öyle anlarda ateşten korkma.'");
+                    break;
+                default: SilahSaticisi(); return;
+            }
+            Console.ResetColor();
+
+            Console.BackgroundColor = ConsoleColor.DarkBlue;
+            Console.WriteLine("\n[Borgath'ın tecrübeleri savaşma azmini artırdı...]");
+            Console.ResetColor();
+            Console.WriteLine("\nDevam etmek için bir tuşa bas...");
+            Console.ReadKey();
+            BorgathHikayeleri(borgath);
+        }
+
+        private void SilahAlimMenusu(NPC borgath)
+        {
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.DarkYellow;
+            Console.WriteLine($"--- ⚔️ {borgath.Ad.ToUpper()}'IN CEPHANESİ ---");
+            Console.ResetColor();
+
+            Console.WriteLine($"\n[Cüzdanın: {oyuncu.Altın} 💰]");
+            Console.WriteLine("\n  [1] [🗡️] Talim Kılıcı     (Hasar +10)  - 50 💰");
+            Console.WriteLine("  [2] [🪓] Savaş Baltası    (Hasar +22)  - 120 💰");
+            Console.WriteLine("  [3] [🗡️] Gümüş Engerek    (Hasar +45)  - 300 💰");
+            Console.WriteLine("  [0] [🔙] Vazgeç");
+
+            Console.Write($"\n{borgath.Ad}: 'Hangi çelikle kaderini yazacaksın?' : ");
+            string alimSecim = Console.ReadLine();
+
+            switch (alimSecim)
+            {
+                case "1":
+                    SatinAlSilah(borgath, "Talim Kılıcı", 50, 7, "Yeni başlayanlar için iyidir, dengesi yerinde.");
+                    break;
+                case "2":
+                    SatinAlSilah(borgath, "Savaş Baltası", 120, 12, "Ağır bir silahtır, vurduğun yerde ot bitmez!");
+                    break;
+                case "3":
+                    SatinAlSilah(borgath, "Gümüş Engerek", 300, 18, "Bunu dövmek için üç gece uyumadım. En iyi işçiliğim budur.");
+                    break;
+                case "0": SilahSaticisi(); return;
+            }
+        }
+
+        private void SatinAlSilah(NPC borgath, string silahAdi, int fiyat, int hasar, string borgathYorumu)
+        {
+            if (oyuncu.Altın >= fiyat)
+            {
+                oyuncu.Altın -= fiyat;
+                oyuncu.Envanter.Add(new Oge(silahAdi, Nadirlik.Rare, OgeTuru.Silah, hasar));
+
+                Console.Clear();
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("--- ✔️ BORGATH ONAYI VERDİ ---");
+                Console.ResetColor();
+
+                Console.WriteLine($"\n[{borgath.Ad}]: '{borgathYorumu}'");
+                Console.WriteLine("\n-------------------------------------------");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine($" [!] {silahAdi.ToUpper()} envanterine eklendi.");
+                Console.ResetColor();
+                Console.WriteLine($" [📉] Kalan Altın: {oyuncu.Altın} 💰");
+                Console.WriteLine("-------------------------------------------");
+
+                OyunuKaydet(oyuncu);
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"\n[{borgath.Ad}]: 'Bedava çelik ancak mezarda olur çocuk. Altın getir!'");
+                Console.ResetColor();
+            }
+
+            Console.WriteLine("\nDevam etmek için bir tuşa bas...");
+            Console.ReadKey();
+            SilahSaticisi();
+        }
+
+        private void EkipmanSatimMenusu(NPC borgath) 
+        {
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.DarkYellow;
+            Console.WriteLine("--- 💰 EŞYA SATIŞ ---");
+            Console.ResetColor();
+
+            if (oyuncu.Envanter == null || oyuncu.Envanter.Count == 0)
+            {
+                Console.WriteLine("\nBorgath: 'Heyben bomboş, beni oyalama.'");
+                Console.ReadKey();
+                SilahSaticisi();
+                return;
+            }
+
+            for (int i = 0; i < oyuncu.Envanter.Count; i++)
+            {
+                int fiyat = SatisFiyatiHesapla(oyuncu.Envanter[i]);
+                Console.WriteLine($"  [{i + 1}] {oyuncu.Envanter[i].Ad} -> {fiyat} 💰");
+            }
+
+            Console.Write("\nSatılacak eşya (0 İptal): ");
+            if (int.TryParse(Console.ReadLine(), out int secim) && secim > 0 && secim <= oyuncu.Envanter.Count)
+            {
+                var satilan = oyuncu.Envanter[secim - 1];
+                int kazanc = SatisFiyatiHesapla(satilan);
+
+                oyuncu.Altın += kazanc;
+                oyuncu.Envanter.RemoveAt(secim - 1);
+
+                Console.WriteLine($"\n{satilan.Ad} satıldı. +{kazanc} Altın kazandın.");
+                OyunuKaydet(oyuncu);
+            }
+
+            Console.WriteLine("\nDevam etmek için bir tuşa bas...");
+            Console.ReadKey();
+            SilahSaticisi();
+        }
+        #endregion
+        public void ZırhSaticisi()
+        {
+            string gorünenad = oyuncu.AethelredTanindi ? "Aethelred" : "Hırslı Demirci";
+            string gorunenRol = oyuncu.AethelredTanindi ? "Kadim Zırh Ustası" : "Demirci";
+
+            NPC aethelred = new NPC(gorünenad, gorunenRol, new string[] {
+               "Çelik sadece bedeni korur, ruhunu koruyacak olan sensin.",
+                "Gümüşışık'ın düşüşü zırhlardaki çatlaktan başladı...",
+                "Dövülen her çelik bir çığlık atar, duyabiliyor musun?"
+            });
+
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.DarkGray;
+            Console.WriteLine($"--- 🛡️ {gorünenad.ToUpper()}'IN OCAĞI ---");
+            Console.ResetColor();
+
+            if (!oyuncu.AethelredTanindi)
+                Console.WriteLine("\nKıvılcımların arasında devasa bir siluet, elindeki çekici ritmik bir hırsla örse vuruyor.");
+            else
+                Console.WriteLine($"\nAethelred: 'Ocağımın sıcaklığı bile dışarıdaki o soğuk karanlığı unutturamıyor, {oyuncu.Ad}. Ne arıyorsun?'");
+
+            aethelred.Konus();
+            Console.WriteLine($"\n[Cüzdanın: {oyuncu.Altın} 💰]");
+            Console.WriteLine("\n  [1] 🛡️ Zırh Tezgâhına Bak (Satın Al)");
+            Console.WriteLine("  [2] 💰 Ganimetlerini Erit (Eski Eşyaları Sat)");
+
+            if (!oyuncu.AethelredTanindi)
+                Console.WriteLine("  [3] 👤 'Burada ne yapıyorsun?' (Tanış)");
+            else
+                Console.WriteLine("  [3] 📜 Eski Hikayeler ve Savaş Teorileri");
+
+            Console.WriteLine("  [0] 🚪 Ayrıl");
+            Console.Write("\nSeçimin: ");
+            string secim = Console.ReadLine();
+
+            switch(secim)
+            {
+                case "1": ZırhAlimMenusu(aethelred); break;
+                case "2": ZırhSatimMenusu(aethelred); break;
+                case "3":
+                  if (!oyuncu.AethelredTanindi) AethelredTanismaDiyalogu();
+                  else AethelredHikayeler(aethelred);
+                break;
+                case "0": return;
+                  default: ZırhSaticisi(); break;
+            }
+        }
+
+        public void AethelredTanismaDiyalogu()
+        {
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("Adam, dövme masasından başını kaldırarak sana bakıyor, gözlerinde bir kıvılcım var.");
+            Console.WriteLine("\n'Adım Aethelred. Bu zırh dükkânının sahibiyim ve savaşın acımasız gerçeklerini bilen bir zırh ustasıyım.'");
+            Console.WriteLine("'Bu dünyada sadece güçlü kalabilenler hayatta kalır. Ben de bu yüzden en sağlam zırhları yaparım.'");
+            Console.WriteLine("'Eğer benimle çalışmak istiyorsan, sadece altın değil, aynı zamanda cesaret ve kararlılık da getirmen gerekir.'");
+            Console.ResetColor();
+            oyuncu.AethelredTanindi = true;
+            OyunuKaydet(oyuncu);
+            Console.BackgroundColor = ConsoleColor.DarkGray;
+            Console.WriteLine("\n[Artık Aethelred'i tanıyorsun. Sana olan saygısı biraz arttı.]");
+            Console.ResetColor();
+            Console.WriteLine("\nDevam etmek için bir tuşa bas...");
+            Console.ReadKey();
+            ZırhSaticisi();
+        }
+
+        public void AethelredHikayeler(NPC aet)
+        {
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.DarkYellow;
+            Console.WriteLine($"--- 📜 {aet.Ad.ToUpper()} İLE KADİM SOHBET ---");
+            Console.ResetColor();
+            Console.WriteLine($"\n[Aethelred]: 'Çelikten fazlasını duymak istiyorsun demek... Sor, ama cevaplar her zaman huzur getirmez.'");
+
+            Console.WriteLine("\n  [1] 'Neden sadece zırh yapıyorsun?' (Zırh Teorisi)");
+            Console.WriteLine("  [2] 'Gümüşışık'ın imza mühürleri ne anlama geliyor?' (Gizli Bilgi)");
+            Console.WriteLine("  [3] 'Hiç delinemeyen bir zırh var mı?' (Efsane)");
+            Console.WriteLine("  [0] 'Geri dön.'");
+
+            Console.Write("\nSorun: ");
+            string sohbetSecim = Console.ReadLine();
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.Cyan;
+
+            switch (sohbetSecim)
+            {
+                case "1":
+                    Console.WriteLine($"[{aet.Ad}]: 'Saldırı geçicidir evlat. Kılıç sallayan her el bir gün yorulur. \nTeorim şu: Savaşları en çok vuran değil, en son ayakta kalan kazanır.'");
+                    Console.WriteLine("\n* Teorik Bilgi: Zırh puanın, canından (HP) daha değerlidir çünkü her darbede canının azalmasını engeller.*");
+                    break;
+                case "2":
+                    Console.WriteLine($"[{aet.Ad}]: 'Gümüşışık 2026 mühürü... Onu sadece gerçek ustalar kullanır. \nEfsaneye göre bu mühür, zırhın içine hapsedilmiş bir koruyucu ruhun imzasıdır.'");
+                    Console.WriteLine("\n* Teorik Bilgi: Mühürlü zırhlar, kritik darbeleri %10 oranında tamamen savuşturabilir.*");
+                    break;
+                case "3":
+                    Console.WriteLine($"[{aet.Ad}]: 'Vardı. \"Göktaşı Zırhı\". Onu babam dövmüştü. \nFakat o zırhı giyen kişi, bir süre sonra zırhın ağırlığıyla değil, içindeki karanlığın yüküyle taşa dönüştü.'");
+                    break;
+                default: ZırhSaticisi(); return;
+            }
+
+            Console.ResetColor();
+            Console.WriteLine("\nDevam etmek için bir tuşa bas...");
+            Console.ReadKey();
+            AethelredHikayeler(aet);
+        }
+
+        public void ZırhAlimMenusu(NPC aet)
+        {
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.DarkCyan;
+            Console.WriteLine("--- 🛡️ AETHELRED'İN TEZGÂHI ---");
+            Console.ResetColor();
+            Console.WriteLine($"[Cüzdanın: {oyuncu.Altın} 💰]\n");
+
+            Console.WriteLine("  [1] Deri Yelek           (Def: 3) - 25 💰");
+            Console.WriteLine("  [2] Zincir Zırh          (Def: 6) - 50 💰");
+            Console.WriteLine("  [3] Şövalye Plaka Zırhı  (Def: 9) - 75 💰");
+            Console.WriteLine("  [0] Vazgeç");
+
+            Console.Write("\nSeçimin: ");
+            string s = Console.ReadLine();
+
+            
+            string isim = ""; int fiyat = 0; int def = 0; Nadirlik nadirlik = Nadirlik.Common; string yorum = "";
+
+            switch (s)
+            {
+                case "1": isim = "Deri Yelek"; fiyat = 25; def = 3; nadirlik = Nadirlik.Common; yorum = "Hafif ama seni bir süre idare eder."; break;
+                case "2": isim = "Zincir Zırh"; fiyat = 50; def = 6; nadirlik = Nadirlik.Common; yorum = "Okçulara karşı iyi bir koruma."; break;
+                case "3": isim = "Şövalye Plaka Zırhı"; fiyat = 75; def = 9; nadirlik = Nadirlik.Rare; yorum = "Gerçek bir kaleye dönüştün!"; break;
+                case "0": ZırhSaticisi(); return;
+                default: ZırhAlimMenusu(aet); return;
+            }
+
+            
+            Console.WriteLine($"\n[Aethelred]: '{isim} mi? {fiyat} altına el sıkışalım mı?'");
+            Console.Write("[E] Evet / [Any] Vazgeç: ");
+
+            if (Console.ReadLine().ToUpper() == "E")
+            {
+                
+                SatinAl(aet, isim, fiyat, nadirlik, def, yorum);
+
+                
+                if (oyuncu.Altın >= 0) 
+                {
+                    Console.Clear();
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine("========================================");
+                    Console.WriteLine($"   🛡️ YENİ EKİPMAN: {isim.ToUpper()} ");
+                    Console.WriteLine("========================================");
+                    Console.ResetColor();
+
+                    Console.WriteLine($"\n [!] Savunma Artışı: +{def}");
+                    Console.WriteLine($" [!] Kalan Altın: {oyuncu.Altın} 💰");
+                    Console.WriteLine($"\n[Aethelred]: '{yorum}'");
+
+                    Console.WriteLine("\nDevam etmek için bir tuşa bas...");
+                    Console.ReadKey();
+                    ZırhSaticisi();
+                }
+            }
+            else
+            {
+                Console.WriteLine("\n[Aethelred]: 'Kararsızlık iyi bir zırhtan daha ağırdır.'");
+                Thread.Sleep(1000);
+                ZırhAlimMenusu(aet);
+            }
+        }
+
+        public void ZırhSatimMenusu(NPC aet)
+        {
+            Console.Clear();
+            Console.WriteLine("--- 💰 ESKİ EKİPMANLARINI ERİT ---");
+            Console.WriteLine("Aethelred eşyalarını değerinin yarısına satın alır.\n");
+
+            if (oyuncu.Envanter.Count == 0)
+            {
+                Console.WriteLine("Satacak bir şeyin yok.");
+                Console.ReadKey();
+                ZırhSaticisi();
+                return;
+            }
+
+            for (int i = 0; i < oyuncu.Envanter.Count; i++)
+            {
+                int satisFiyati = 50; 
+                Console.WriteLine($" [{i + 1}] {oyuncu.Envanter[i].Ad} - {satisFiyati} 💰");
+            }
+
+            Console.WriteLine(" [0] Geri Dön");
+            Console.Write("\nSatmak istediğin eşya no: ");
+            if (int.TryParse(Console.ReadLine(), out int secim) && secim > 0 && secim <= oyuncu.Envanter.Count)
+            {
+                var oge = oyuncu.Envanter[secim - 1];
+                oyuncu.Altın += 50; // Değeri dinamik yapabilirsin
+                oyuncu.Envanter.Remove(oge);
+                Console.WriteLine($"\n{oge.Ad} satıldı! +50 Altın kazandın.");
+                OyunuKaydet(oyuncu);
+            }
+
+            Console.ReadKey();
+            ZırhSaticisi();
+        }
 
         public void BolgeSecimiYap()
         {
