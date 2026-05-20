@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using static Mini_Oyun.Karakter;
 
 
 namespace Mini_Oyun
@@ -85,10 +86,9 @@ namespace Mini_Oyun
                 
                  Console.WriteLine($"\n[💾] {k.Ad} başarıyla kaydedildi."); 
             }
-            catch (Exception ex)
+            catch 
             {
-                // Hatayı görmek için burayı geçici olarak açabilirsin:
-                // Console.WriteLine("Kayıt Hatası: " + ex.Message);
+               Console.WriteLine($"\n[!] {k.Ad} kaydedilemedi.");
             }
         }
 
@@ -298,9 +298,10 @@ namespace Mini_Oyun
                         taslak.SaldiriGucu,
                         taslak.VerilenTecrube,
                         taslak.Turu,
-                        taslak.LootTableId
+                        taslak.LootTableId,
+                        taslak.Savunma
                     );
-                    yeniCanavar.Savunma = taslak.Savunma;
+                    
                     slotlar.Add(yeniCanavar);
                 }
 
@@ -389,7 +390,7 @@ namespace Mini_Oyun
                         foreach (var hedef in slotlar.Where(s => s.HayattaMi()))
                         {
                             int netHasar = Math.Max(1, hamHasar - hedef.Savunma);
-                            hedef.Can -= netHasar;
+                            hedef.HasarAl(netHasar);
                             Console.ForegroundColor = ConsoleColor.Yellow;
                             Console.WriteLine($"-> {hedef.Ad} düşmanına {netHasar} hasar verdin!");
                         }
@@ -412,22 +413,28 @@ namespace Mini_Oyun
                     int toplamExp = slotlar.Sum(s => s.VerilenTecrube);
                     int toplamAltin = rnd.Next(45, 101);
 
-                    oyuncu.TecrubeKazan(toplamExp);
+                    
+                    LevelManager.TecrubeKazan(oyuncu, toplamExp);
                     oyuncu.Altın += toplamAltin;
 
-                    // EXP Bar Hesaplamaları
-                    int baslangicEXP = oyuncu.MevcutSeviyeBaslangicEXP();
-                    int gerekenEXP = oyuncu.SonrakiSeviyeIcinGerekenToplamEXP();
-                    int mevcutIlerleme = oyuncu.Tecrube - baslangicEXP;
-                    int seviyeIcinGereken = gerekenEXP - baslangicEXP;
+                    
+                    int gerekenToplamEXP = LevelManager.GerekenEXP(oyuncu.Seviye);
 
-                    double yuzde = seviyeIcinGereken > 0 ? (double)mevcutIlerleme / seviyeIcinGereken * 100 : 0;
-                    yuzde = Math.Min(100, Math.Max(0, yuzde));
+                   
+                    float oran = (float)oyuncu.Tecrube / gerekenToplamEXP;
+                    int tamYuzde = (int)(oran * 100);
 
+                    
                     Console.WriteLine($"\n⭐ Kazanılan EXP: +{toplamExp}");
                     Console.WriteLine($"💰 Kazanılan Altın: +{toplamAltin}");
-                    Console.WriteLine($"📊 Seviye İlerlemesi: [%{(int)yuzde}]");
-                    Console.WriteLine(CanBariCiz((int)yuzde, 100));
+
+                   
+                    Console.WriteLine($"📊 Seviye İçi EXP: {oyuncu.Tecrube}/{gerekenToplamEXP} (%{tamYuzde})");
+
+                    
+                    Console.WriteLine(LevelManager.GetEXPBar(oyuncu));
+
+                   
 
                     // GRUP GANİMETİ MANTIĞI
                     temizlenenGrupSayisi++;
@@ -447,20 +454,20 @@ namespace Mini_Oyun
 
                         foreach (var oge in secilenGanimetler)
                         {
-                            // STACK KONTROLÜ: Envanterde aynı isimde ve yer olan bir slot var mı?
+                            
                             var mevcutStack = oyuncu.Envanter.Find(x => x.Ad == oge.Ad && x.Miktar < x.MaksimumStack);
 
                             if (mevcutStack != null)
                             {
-                                // Zaten varsa sadece miktarını artır (Envanter doluluğuna bakmaya gerek yok)
+                                
                                 mevcutStack.Miktar++;
-                                Console.ForegroundColor = Oge.NadirlikRengiGetir(oge.Nadirlik);
+                                Console.ForegroundColor = OgeUIHelper.NadirlikRengiGetir(oge.Nadirlik);
                                 Console.WriteLine($" > {oge.Ad} (x{mevcutStack.Miktar}) mevcut yığına eklendi.");
                             }
-                            else if (oyuncu.Envanter.Count < 20) // Yeni bir slot gerekiyorsa yer var mı?
+                            else if (oyuncu.Envanter.Count < 20) 
                             {
                                 oyuncu.Envanter.Add(oge);
-                                Console.ForegroundColor = Oge.NadirlikRengiGetir(oge.Nadirlik);
+                                Console.ForegroundColor = OgeUIHelper.NadirlikRengiGetir(oge.Nadirlik);
                                 Console.WriteLine($" > {oge.Ad} bulundu! Yeni envanter slotuna eklendi.");
                             }
                             else
@@ -487,8 +494,8 @@ namespace Mini_Oyun
                         Console.ResetColor();
                     }
                 }
-
-                if (!oyuncu.Ad.StartsWith("Misafir_")) OyunuKaydet(oyuncu);
+                OyunuKaydet(oyuncu);
+                
 
                 // SAVAŞ SONRASI SEÇENEKLERİ
                 bool kararVerildi = false;
@@ -616,7 +623,7 @@ namespace Mini_Oyun
                             }
                             else
                             {
-                                karakter.OgeKullanNesneIle(secilenOge); 
+                                InventoryManager.OgeKullan(karakter, secilenOge);
                             }
                         }
                     }
@@ -650,7 +657,7 @@ namespace Mini_Oyun
                     Console.Write("│  ");
 
                     // Nadirlik rengini eşyanın adına uygula
-                    Console.ForegroundColor = Oge.NadirlikRengiGetir(oge.Nadirlik);
+                    Console.ForegroundColor = OgeUIHelper.NadirlikRengiGetir(oge.Nadirlik);
 
                     // STACK GÖSTERİMİ: Miktar 1'den büyükse (x5) şeklinde ekle
                     string miktarGosterimi = oge.Miktar > 1 ? $" (x{oge.Miktar})" : "";
@@ -788,8 +795,8 @@ namespace Mini_Oyun
         private void KarakterAyrıntıları()
         {
             Console.Clear();
-            int panelGenislik = 58; // İç genişlik
-            int gerekenToplamTecrube = oyuncu.SonrakiSeviyeIcinGerekenToplamEXP();
+            int panelGenislik = 58; 
+            int gerekenToplamTecrube = LevelManager.SonrakiSeviyeIcinGerekenToplamEXP(oyuncu);
             int kalanTecrube = gerekenToplamTecrube - oyuncu.Tecrube;
 
             // --- ÜST BAŞLIK ---
@@ -806,8 +813,8 @@ namespace Mini_Oyun
             YazdirProfilSatiri("KRİTİK", "%" + oyuncu.KritikSans, ConsoleColor.Magenta);
 
             // --- İLERLEME ÇUBUĞU ---
-            string expBar = oyuncu.GetEXPBar();
-            
+            string expBar = LevelManager.GetEXPBar(oyuncu);
+
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.Write("│ ");
             Console.ForegroundColor = ConsoleColor.Gray;
