@@ -9,44 +9,44 @@ namespace Mini_Oyun
 {
     public class Karakter
     {
-        // NPC LER İÇİN OLAN KISIM 
-        public bool BoranTanindi { get; set; }
-        public bool EleraTanindi { get; set; }
-        public bool SaticiTanisildiMi { get; set; } = false;
-        public int SaticiKonusmaSayisi { get; set; } = 0;
-
-        public bool AethelredTanindi { get; set; }
-
-        public string Sifre { get; set; }
+        // Temel Kimlik
         public string Ad { get; set; }
+        public string Sifre { get; set; }
+
+        // Durum Değerleri
         public int Can { get; set; }
-        public int Tecrube { get; set; }
+        public int MaksimumCan { get; set; } = 100;
+        public int Altın { get; set; } = 50;
+
+        // Seviye ve Tecrübe
+        public int Seviye { get; set; } = 1;
+        public int Tecrube { get; set; } = 0;
         public int ToplamTecrube { get; set; } = 0;
-        public int Seviye { get; set; }
         public int YetenekPuani { get; set; } = 0;
 
-        // --- İSTATİSTİKLER ---
+        // İstatistikler 
         public int HP_Stat { get; set; } = 1;
         public int STR_Stat { get; set; } = 1;
         public int DEX_Stat { get; set; } = 1;
-        public int KritikSans => 15;
+        public int KritikSans { get; set; } = 15;
+        public int SaldiriGucu { get; set; }
+        public int Savunma { get; set; }
 
-        // --- DİNAMİK HESAPLANAN ÖZELLİKLER ---
+        // Ekipmanlar
+        public List<Oge> Envanter { get; set; } = new List<Oge>();
+        public Oge DonanimliSilah { get; set; }
+        public Oge MevcutZirh { get; set; }
 
-        public int MaksimumCan { get; set; } = 100;
-        public int SaldiriGucu { get; set; } = 25;
-        public int Savunma { get; set; } = 1;
+        // NPC İlişkileri 
+        public bool BoranTanindi { get; set; }
+        public bool EleraTanindi { get; set; }
+        public bool SaticiTanisildiMi { get; set; }
+        public int SaticiKonusmaSayisi { get; set; }
+        public bool AethelredTanindi { get; set; }
 
-        // --- TOPLAM DEĞERLER ---
+        // Toplam Güç Hesaplamaları 
         public int ToplamSaldiriGucu => (25 + (STR_Stat * 2)) + (DonanimliSilah?.EtkiDegeri ?? 0);
         public int ToplamSavunma => (1 + (DEX_Stat * 1)) + (MevcutZirh?.EtkiDegeri ?? 0);
-
-        public List<Oge> Envanter { get; set; }
-        public Oge DonanimliSilah { get; set; }
-
-        public int Altın { get; set; } = 50;
-
-        public Oge MevcutZirh { get; set; }
 
         public  Karakter() { }
 
@@ -55,219 +55,115 @@ namespace Mini_Oyun
             Ad = ad;
             Seviye = 1;
             Tecrube = 0;
+            Altın = 50;
+            KritikSans = 15;
             HP_Stat = 1;
             STR_Stat = 1;
             DEX_Stat = 1;
-            Altın = 50;
-
             Envanter = new List<Oge>();
-
-            Envanter.Add(new Oge("Demir Kılıc", Nadirlik.Common, OgeTuru.Silah, 5));
-            Envanter.Add(new Oge("Küçük Can İksiri", Nadirlik.Common, OgeTuru.Tuketilebilir, 25));
-
-
+            BaslangicEkipmanlariniVer();
             Can = MaksimumCan;
             DonanimliSilah = null;
+            MevcutZirh = null;
         }
-
-        #region karakter seviye ve tecrube sistemi
-        public int SonrakiSeviyeIcinGerekenToplamEXP()
+        private void BaslangicEkipmanlariniVer()
         {
-            if (Seviye == 1) return 100;
-            
-            return 300 * (int)Math.Pow(2, Seviye - 2);
+            Envanter.Add(new Oge("Demir Kılıç", Nadirlik.Common, OgeTuru.Silah, 5));
+            Envanter.Add(new Oge("Küçük Can İksiri", Nadirlik.Common, OgeTuru.Tuketilebilir, 25, miktar: 2));
         }
-
-        public int MevcutSeviyeBaslangicEXP()
-        {
-            
-            return 0;
-        }
-
-        public void TecrubeKazan(int miktar)
-        {
-            Tecrube += miktar;       
-            ToplamTecrube += miktar; 
-
-            Console.WriteLine($"\n[+] {miktar} tecrübe puanı kazandınız.");
-
-            while (Tecrube >= SonrakiSeviyeIcinGerekenToplamEXP())
-            {
-                int gereken = SonrakiSeviyeIcinGerekenToplamEXP();
-                Tecrube -= gereken;
-                SeviyeAtla();
-            }
-        }
-
-        public void SeviyeAtla()
-        {
-            Seviye++;
-            YetenekPuani += 1;
-            Can = MaksimumCan; 
-
-            Console.WriteLine($"\n*** TEBRİKLER! Seviye Atladınız: {Seviye} ***");
-            Console.WriteLine("1 Yeni Yetenek Puanı Kazandınız!");
-        }
-
-
-        public string GetEXPBar()
-        {
-            int hedef = SonrakiSeviyeIcinGerekenToplamEXP();
-            double oran = (double)Tecrube / hedef; 
-
-            if (oran > 1) oran = 1;
-
-            int barGenisligi = 20;
-            int dolu = (int)(oran * barGenisligi);
-
-            string bar = new string('█', dolu) + new string('░', barGenisligi - dolu);
-            return $"{bar} %{(int)(oran * 100)}";
-        }
-        #endregion
-
-
-        #region karakter envanter ve öğe kullanımı
-        public void EnvanteriGoster()
-        {
-            Console.WriteLine("\n--- Envanter ---");
-            if (Envanter.Count == 0)
-            {
-                Console.WriteLine("Envanteriniz Boş");
-                return;
-            }
-            for (int i = 0; i < Envanter.Count; i++)
-            {
-                Console.Write($"{i + 1}. ");
-                Envanter[i].BilgileriGoster();
-            }
-            Console.WriteLine("-----------------\n");
-        }
-
-        public void OgeKullan(int index)
-        {
-            if (index < 0 || index >= Envanter.Count)
-            {
-                Console.WriteLine("Geçersiz öğe numarası.");
-                return;
-            }
-
-            Oge secilenOge = Envanter[index];
-
-            // 1. İKSİR KULLANIMI
-            if (secilenOge.Tur == OgeTuru.Tuketilebilir)
-            {
-                Can += secilenOge.EtkiDegeri;
-                if (Can > MaksimumCan) Can = MaksimumCan;
-                Console.WriteLine($"{secilenOge.Ad} kullandınız. Güncel Can: {Can}");
-                Envanter.RemoveAt(index);
-            }
-            // 2. SİLAH KUŞANMA
-            else if (secilenOge.Tur == OgeTuru.Silah)
-            {
-                if (DonanimliSilah != null)
-                {
-                    Envanter.Add(DonanimliSilah);                             
-                    SaldiriGucu -= DonanimliSilah.EtkiDegeri;
-                    Console.WriteLine($"{DonanimliSilah.Ad} çıkarıldı.");
-                }
-                DonanimliSilah = secilenOge;
-                SaldiriGucu += DonanimliSilah.EtkiDegeri;
-                Envanter.RemoveAt(index);
-                Console.WriteLine($"{DonanimliSilah.Ad} kuşandınız! Toplam Saldırı Gücü: {SaldiriGucu}");
-            }
-            //3. ZIRH KUŞANMA
-            else if (secilenOge.Tur == OgeTuru.Zirh)
-            {
-                if (MevcutZirh != null)
-                {
-                    Envanter.Add(MevcutZirh);
-                    Savunma -= MevcutZirh.EtkiDegeri; 
-                    Console.WriteLine($"{MevcutZirh.Ad} çıkarıldı.");
-                }
-
-                MevcutZirh = secilenOge;
-                Savunma += MevcutZirh.EtkiDegeri; 
-                Envanter.RemoveAt(index);
-
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.WriteLine($"{MevcutZirh.Ad} kuşandınız! Toplam Savunma: {Savunma}");
-                Console.ResetColor();
-            }
-        }
-        public void OgeKullanNesneIle(Oge secilenOge)
-        {
-            if (secilenOge == null) return;
-
-            // 1. İKSİR KULLANIMI (Tüketilebilir)
-            if (secilenOge.Tur == OgeTuru.Tuketilebilir)
-            {
-                
-                if (Can >= MaksimumCan)
-                {
-                    Thread.Sleep(2000);
-                    Console.WriteLine("\n[!] Canınız zaten tamamen dolu!");
-                }
-                else
-                {
-                    Can += secilenOge.EtkiDegeri;
-                    if (Can > MaksimumCan) Can = MaksimumCan;
-
-                    // STACK MANTIĞI: Miktarı 1 azalt
-                    secilenOge.Miktar--;
-                    Thread.Sleep(2000);
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine($"\n[🧪] {secilenOge.Ad} kullandınız. (+{secilenOge.EtkiDegeri} HP)");
-                    Console.WriteLine($"[📊] Güncel Can: {Can}/{MaksimumCan}");
-                    Oyun_Motoru.OyunuKaydet(this);
-                    Console.ResetColor();
-
-                    
-                    if (secilenOge.Miktar <= 0)
-                    {
-                        Thread.Sleep(2000);
-                        Envanter.Remove(secilenOge);
-                        Console.WriteLine("[!] İksir yığınınız tükendi.");
-                    }
-                    else
-                    {
-                        Thread.Sleep(2000);
-                        Console.WriteLine($"[📦] Kalan miktar: {secilenOge.Miktar}");
-                    }
-                }
-            }
-            // 2. SİLAH KUŞANMA
-            else if (secilenOge.Tur == OgeTuru.Silah)
-            {
-                if (DonanimliSilah != null)
-                {
-                    Envanter.Add(DonanimliSilah);
-                    SaldiriGucu -= DonanimliSilah.EtkiDegeri;
-                }
-                DonanimliSilah = secilenOge;
-                SaldiriGucu += DonanimliSilah.EtkiDegeri;
-                Envanter.Remove(secilenOge);
-                Console.WriteLine($"\n[⚔️] {DonanimliSilah.Ad} kuşandınız! Güç: {SaldiriGucu}");
-            }
-            // 3. ZIRH KUŞANMA
-            else if (secilenOge.Tur == OgeTuru.Zirh)
-            {
-                if (MevcutZirh != null)
-                {
-                    Envanter.Add(MevcutZirh);
-                    Savunma -= MevcutZirh.EtkiDegeri;
-                }
-                MevcutZirh = secilenOge;
-                Savunma += MevcutZirh.EtkiDegeri;
-                Envanter.Remove(secilenOge);
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.WriteLine($"\n[🛡️] {MevcutZirh.Ad} kuşandınız! Savunma: {Savunma}");
-                Console.ResetColor();
-            }
-
-            Thread.Sleep(1000);
-        }
-        #endregion
-
         public bool HayattaMi() => Can > 0;
+        public static class LevelManager
+        {
+            public static int GerekenEXP(int seviye)
+            {
+                return seviye == 1 ? 100 : 300 * (int)Math.Pow(2, seviye - 2);
+            }
+            public static int SonrakiSeviyeIcinGerekenToplamEXP(Karakter karakter)
+            {
+                return GerekenEXP(karakter.Seviye);
+            }
+            public static string GetEXPBar(Karakter karakter) 
+            {
+                int barGenisligi = 20;
+                int gerekenEXP = GerekenEXP(karakter.Seviye);
+
+                float oran = (float)karakter.Tecrube / gerekenEXP;
+                int doluKisim = (int)(oran * barGenisligi);
+                int bosKisim = barGenisligi - doluKisim;
+
+                return "[" + new string('■', doluKisim) + new string('-', bosKisim) + "] " +
+                       "%" + (int)(oran * 100);
+            }
+
+            public static void TecrubeKazan(Karakter karakter, int miktar)
+            {
+                karakter.Tecrube += miktar;
+                karakter.ToplamTecrube += miktar;
+                Console.WriteLine($"\n[+] {miktar} tecrübe kazandınız.");
+
+                while (karakter.Tecrube >= GerekenEXP(karakter.Seviye))
+                {
+                    karakter.Tecrube -= GerekenEXP(karakter.Seviye);
+                    SeviyeAtla(karakter);
+                }
+            }
+
+            private static void SeviyeAtla(Karakter karakter)
+            {
+                karakter.Seviye++;
+                karakter.YetenekPuani++;
+                karakter.Can = karakter.MaksimumCan;
+                Console.WriteLine($"\n*** TEBRİKLER! Seviye: {karakter.Seviye} ***");
+            }
+        }
+        public static class InventoryManager
+        {
+            public static void OgeKullan(Karakter karakter, Oge secilenOge)
+            {
+                if (secilenOge == null) return;
+
+                switch (secilenOge.Tur)
+                {
+                    case OgeTuru.Tuketilebilir:
+                        IksirKullan(karakter, secilenOge);
+                        break;
+                    case OgeTuru.Silah:
+                        SilahKusan(karakter, secilenOge);
+                        break;
+                    case OgeTuru.Zirh:
+                        ZirhKusan(karakter, secilenOge);
+                        break;
+                }
+            }
+
+            private static void IksirKullan(Karakter k, Oge iksir)
+            {
+                if (k.Can >= k.MaksimumCan)
+                {
+                    Console.WriteLine("\n[!] Canınız zaten dolu!");
+                    return;
+                }
+                k.Can = Math.Min(k.Can + iksir.EtkiDegeri, k.MaksimumCan);
+                iksir.Miktar--;
+                if (iksir.Miktar <= 0) k.Envanter.Remove(iksir);
+                Console.WriteLine($"[🧪] {iksir.Ad} kullanıldı. Güncel Can: {k.Can}");
+            }
+
+            private static void SilahKusan(Karakter k, Oge yeniSilah)
+            {
+                if (k.DonanimliSilah != null) k.Envanter.Add(k.DonanimliSilah);
+                k.DonanimliSilah = yeniSilah;
+                k.Envanter.Remove(yeniSilah);
+                Console.WriteLine($"[⚔️] {yeniSilah.Ad} kuşandınız!");
+            }
+
+            private static void ZirhKusan(Karakter k, Oge yeniZirh)
+            {
+                if (k.MevcutZirh != null) k.Envanter.Add(k.MevcutZirh);
+                k.MevcutZirh = yeniZirh;
+                k.Envanter.Remove(yeniZirh);
+                Console.WriteLine($"[🛡️] {yeniZirh.Ad} kuşandınız!");
+            }
+        }
     }
 }
