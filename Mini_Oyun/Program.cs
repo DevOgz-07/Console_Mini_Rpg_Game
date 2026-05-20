@@ -21,7 +21,7 @@ namespace Mini_Oyun
     }
     internal class Program
     {
-        public static async Task Main(string[] args)
+        public static void Main(string[] args)
         {
             Console.OutputEncoding = System.Text.Encoding.UTF8;
             Oyun_Motoru motor = new Oyun_Motoru();

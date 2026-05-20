@@ -74,6 +74,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Canavar ve Boss.cs" />
+    <Compile Include="Core\Security\Base64EncoderService.cs" />
+    <Compile Include="Core\Security\ICryptoService.cs" />
+    <Compile Include="Core\Security\IEncoderService.cs" />
+    <Compile Include="Core\Security\Sha256CryptoService.cs" />
+    <Compile Include="Core\Security\VeriKoruma.cs" />
     <Compile Include="GuncellemeSistemi.cs" />
     <Compile Include="Karakter.cs" />
     <Compile Include="LootEntry.cs" />
@@ -84,7 +89,6 @@
     <Compile Include="OyunMotoru.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="VeriKoruma.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
